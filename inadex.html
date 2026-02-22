@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Way</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary-purple: #8e44ad;
+            --accent-purple: #a29bfe;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass: rgba(255, 255, 255, 0.15);
+            --gold: #FFD700;
+            --silver: #C0C0C0;
+            --bronze: #CD7F32;
+            --success: #2ecc71;
+            --disabled: #bdc3c7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+
+        body {
+            background: #f0f2f5; min-height: 100vh; padding-top: 110px;
+            overflow-x: hidden; position: relative;
+        }
+
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-gradient); clip-path: circle(30% at 90% 10%); z-index: -1;
+        }
+
+        header {
+            position: fixed; top: 0; left: 0; right: 0; height: 75px; 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 5%; background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 9999;
+        }
+
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .menu-btn { cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 10px; border-radius: 12px; transition: 0.3s; }
+        .menu-btn:hover { background: rgba(142, 68, 173, 0.1); }
+        .menu-btn span { width: 25px; height: 3px; background: var(--primary-purple); border-radius: 5px; }
+
+        .side-drawer {
+            position: fixed; top: 0; right: -100%; width: 350px; height: 100%;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);
+            z-index: 10002; transition: 0.5s cubic-bezier(0.77,0.2,0.05,1.0);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1); padding: 30px; overflow-y: auto;
+        }
+        .side-drawer.active { right: 0; }
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 10001; display: none; }
+
+        .live-indicator { display: inline-block; width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; margin-left: 8px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { opacity: 0.5; box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); } 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+
+        .stats-card { background: var(--bg-gradient); color: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; text-align: center; }
+        .stat-item { margin: 10px 0; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; display: block; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+
+        .drawer-title { color: var(--primary-purple); font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--primary-purple); cursor: pointer; }
+
+        .user-pill {
+            display: none; align-items: center; gap: 8px;
+            background: white; padding: 4px 12px; border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--primary-purple);
+            color: var(--primary-purple); font-weight: 500; font-size: 0.85rem; margin-right: 15px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .user-pill:hover { background: var(--primary-purple); color: white; transform: scale(1.05); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .hero-title { text-align: center; font-size: 2.5rem; color: #2d3436; margin-bottom: 40px; }
+        
+        /* Category Filters Styles */
+        .filter-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 20px; border-radius: 25px; border: 2px solid var(--primary-purple); background: white; color: var(--primary-purple); font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .filter-btn.active, .filter-btn:hover { background: var(--primary-purple); color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(142, 68, 173, 0.3); }
+
+        .campaigns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 35px; }
+
+        .card {
+            background: white; border-radius: 35px; padding: 25px; transition: 0.4s;
+            border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            text-align: center; position: relative;
+        }
+        .card:hover { transform: translateY(-10px); }
+        .campaign-img { width: 100%; height: 200px; object-fit: cover; border-radius: 25px; margin-bottom: 20px; }
+        .progress-bar { width: 100%; height: 12px; background: #eee; border-radius: 20px; overflow: hidden; margin: 15px 0;}
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #8e44ad); transition: 1.5s; }
+        
+        /* Quick Amounts Styles */
+        .quick-amounts { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
+        .quick-btn { flex: 1; padding: 10px 5px; border-radius: 15px; border: 1px solid rgba(142, 68, 173, 0.2); background: rgba(162, 155, 254, 0.05); color: var(--primary-purple); font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.9rem;}
+        .quick-btn:hover { background: var(--primary-purple); color: white; }
+
+        .amount-input { width: 100%; padding: 15px; border-radius: 20px; border: 2px solid #f0f0f0; margin-bottom: 15px; font-size: 1rem; outline: none; text-align: center; transition: 0.3s; }
+        .amount-input:focus { border-color: var(--primary-purple); }
+        
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .donate-btn { width: 100%; padding: 15px; border-radius: 20px; border: none; background: var(--primary-purple); color: white; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1.05rem; }
+        .donate-btn:disabled { background: var(--disabled); cursor: not-allowed; transform: none; }
+        
+        .result-btn { width: 100%; padding: 12px; border-radius: 20px; border: 2px solid var(--success); color: var(--success); font-weight: 700; cursor: pointer; background: transparent; transition: 0.3s;}
+        .result-btn:hover { background: var(--success); color: white; }
+
+        .heroes-section { margin-top: 80px; padding: 50px 20px; background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); border-radius: 40px; border: 1px solid white; text-align: center; margin-bottom: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
+        .heroes-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
+        .hero-card { background: white; padding: 20px; border-radius: 25px; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: 0.3s; border: 1px solid #f0f0f0; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.03); }
+        .hero-avatar { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; background: var(--primary-purple); }
+        .rank-1 .hero-avatar { background: var(--gold); }
+        .rank-2 .hero-avatar { background: var(--silver); }
+        .rank-3 .hero-avatar { background: var(--bronze); }
+        .hero-name { font-weight: 700; color: #2d3436; font-size: 1.1rem; }
+        .hero-amount { color: var(--primary-purple); font-weight: 700; font-size: 1.2rem; }
+        .rank-tag { position: absolute; top: -10px; background: #2d3436; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 35px; max-width: 90%; text-align: center; position: relative; }
+        .modal-img { max-width: 100%; max-height: 60vh; border-radius: 20px; }
+        .close-modal { position: absolute; top: -15px; left: -15px; width: 40px; height: 40px; background: var(--primary-purple); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        #custom-alert { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #2d3436; color: white; padding: 15px 35px; border-radius: 50px; display: none; z-index: 10001; }
+        .loader { display: none; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-purple); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Profile Specific Styles */
+        .profile-modal-content { max-width: 450px; width: 90%; padding: 30px 20px; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--bg-gradient); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: bold; margin: 0 auto 15px; box-shadow: 0 10px 20px rgba(142, 68, 173, 0.2); }
+        .profile-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .profile-stat-box { background: rgba(142, 68, 173, 0.05); padding: 15px; border-radius: 15px; border: 1px solid rgba(142, 68, 173, 0.15); }
+        .profile-stat-value { font-size: 1.4rem; font-weight: 700; color: var(--primary-purple); }
+        .profile-stat-label { font-size: 0.85rem; color: #666; margin-top: 5px; }
+        .history-list { max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 15px; padding: 10px; border: 1px solid #eee; }
+        html[dir="rtl"] .history-list { text-align: right; }
+        html[dir="ltr"] .history-list { text-align: left; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #eaeaea; font-size: 0.95rem; align-items: center; }
+        .history-item:last-child { border-bottom: none; }
+        .history-item-title { font-weight: 600; color: #2d3436; }
+        .history-item-amount { color: var(--success); font-weight: bold; background: rgba(46, 204, 113, 0.1); padding: 4px 10px; border-radius: 20px; }
+
+        /* Language toggle ball */
+        .lang-ball{
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 14px 35px rgba(0,0,0,0.12);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            z-index: 10003;
+            transition: transform .2s ease;
+            user-select: none;
+        }
+        .lang-ball:active{ transform: scale(0.95); }
+        .lang-ball span{ font-weight: 800; color: var(--primary-purple); letter-spacing: 0.5px; }
+        html[dir="rtl"] .lang-ball{ right: 22px; }
+
+        @media (max-width: 480px) {
+            header { height: 65px; padding: 0 15px; }
+            .logo { font-size: 1.4rem; }
+            body { padding-top: 90px; }
+            .side-drawer { width: 85%; }
+            .user-pill { font-size: 0.75rem; margin-right: 5px; }
+            .lang-ball { width: 52px; height: 52px; bottom: 18px; right: 18px; }
+            .profile-stats-grid { grid-template-columns: 1fr; }
+            .filter-container { gap: 8px; }
+            .filter-btn { padding: 6px 15px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="custom-alert"></div>
+    <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+
+    <div id="side-drawer" class="side-drawer">
+        <h2 class="drawer-title">
+            <span class="live-indicator"></span>
+            <span data-i18n="drawer_stats_title">📊 Platform Stats</span>
+        </h2>
+        <div id="stats-container">
+            <div class="stats-card">
+                <div class="stat-item">
+                    <span class="stat-label" data-i18n="stats_total_donations">Total Donations</span>
+                    <span id="total-pi-stats" class="stat-value">0.00 π</span>
+                </div>
+                <hr style="opacity:0.3; margin:10px 0;">
+                <div class="stat-item">
+                    <span class="stat-label" data-i18n="stats_total_campaigns">Campaigns</span>
+                    <span id="total-campaigns-stats" class="stat-value">0</span>
+                </div>
+            </div>
+        </div>
+        <h3 class="drawer-title" style="font-size: 1.1rem; margin-top: 20px;">
+            <span data-i18n="drawer_donors_title">👤 All Donors Log</span>
+        </h3>
+        <div id="all-donors-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+
+    <div id="image-modal" class="modal" onclick="closeImage()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="close-modal" onclick="closeImage()">&times;</div>
+            <h3 id="modal-title" style="margin-bottom: 15px; color: var(--primary-purple);" data-i18n="modal_title_default">Your Donation Impact</h3>
+            <img id="modal-img-src" src="" class="modal-img">
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal" onclick="closeProfile()">
+        <div class="modal-content profile-modal-content" onclick="event.stopPropagation()">
+            <div class="close-modal" onclick="closeProfile()">&times;</div>
+            
+            <div class="profile-avatar" id="prof-avatar">U</div>
+            <h2 style="color: var(--primary-purple); margin-bottom: 5px;"><span id="profile-username">@username</span></h2>
+            <div style="font-size: 0.9rem; color: #777; margin-bottom: 20px;" data-i18n="profile_title">My Profile</div>
+            
+            <div class="profile-stats-grid">
+                <div class="profile-stat-box">
+                    <div class="profile-stat-value" id="prof-total">0.00 π</div>
+                    <div class="profile-stat-label" data-i18n="profile_total">Total Donated</div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-value" id="prof-camps">0</div>
+                    <div class="profile-stat-label" data-i18n="profile_campaigns">Campaigns Helped</div>
+                </div>
+                <div class="profile-stat-box" style="grid-column: 1 / -1;">
+                    <div class="profile-stat-value" id="prof-rank">-</div>
+                    <div class="profile-stat-label" data-i18n="profile_rank">Global Rank</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 25px 0 15px; color: var(--primary-purple); font-size: 1.1rem; text-align: center;" data-i18n="profile_history">Donation History</h3>
+            <div id="prof-history" class="history-list">
+                </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-right">
+            <div class="menu-btn" onclick="toggleDrawer()"><span></span><span></span><span></span></div>
+            <div class="logo" onclick="location.reload()">Donate Way</div>
+        </div>
+        <div class="auth-section">
+            <button id="login-button" style="background:var(--primary-purple); color:white; border:none; padding:10px 25px; border-radius:50px; font-weight:700; cursor:pointer;" onclick="login()">
+                <span data-i18n="btn_login">Login</span>
+            </button>
+            <div id="user-pill" class="user-pill" onclick="openProfile()">
+                <span>👤</span> <span id="username-display"></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="hero-title" data-i18n="hero_title">Your gift today... a new life tomorrow</h1>
+        
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterCampaigns('all', this)" data-i18n="filter_all">All</button>
+            <button class="filter-btn" onclick="filterCampaigns('health', this)" data-i18n="filter_health">Health</button>
+            <button class="filter-btn" onclick="filterCampaigns('education', this)" data-i18n="filter_education">Education</button>
+            <button class="filter-btn" onclick="filterCampaigns('food', this)" data-i18n="filter_food">Food</button>
+            <button class="filter-btn" onclick="filterCampaigns('emergency', this)" data-i18n="filter_emergency">Emergency</button>
+        </div>
+
+        <div id="main-loader" class="loader"></div>
+        <div class="campaigns-grid" id="campaigns-container"></div>
+
+        <div class="heroes-section">
+            <h2 style="color:var(--primary-purple);" data-i18n="heroes_title">🏆 Top Donors</h2>
+            <div id="heroes-container" class="heroes-list"></div>
+        </div>
+    </div>
+
+    <button class="lang-ball" id="lang-ball" onclick="toggleLanguage()" aria-label="Toggle Language">
+        <span id="lang-ball-label">AR</span>
+    </button>
+
+    <script>
+        const SUPABASE_URL = 'https://axjkwrssmofzavaoqutq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_tiuMncgWhf1YRWoD-uYQ3Q_ziI8OKci';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const Pi = window.Pi;
+
+        let currentUser = null;
+        let campaigns = [];
+        let globalDonorStats = []; 
+        let currentLang = 'en';
+        let currentCategory = 'all'; // الفئة الافتراضية
+
+        const I18N = {
+            en: {
+                drawer_stats_title: "📊 Platform Stats",
+                stats_total_donations: "Total Donations",
+                stats_total_campaigns: "Campaigns",
+                drawer_donors_title: "👤 All Donors Log",
+
+                modal_title_default: "Your Donation Impact",
+                modal_impact_prefix: "Donation impact: ",
+                msg_impact_soon: "Impact images will be available soon.",
+                btn_login: "Login",
+
+                hero_title: "Your gift today... a new life tomorrow",
+                heroes_title: "🏆 Top Donors",
+                rank_label: "Rank",
+
+                label_goal: "Goal:",
+                btn_donate_now: "Donate now",
+                btn_connecting: "Connecting...",
+                btn_done: "Donated ✅",
+                btn_view_impact: "🖼️ View impact",
+                placeholder_amount: "0.00",
+
+                msg_login_first: "Please login first.",
+                msg_valid_amount: "Enter a valid amount.",
+                msg_use_pi_browser: "Please use Pi Browser.",
+                msg_thanks: "Thank you!",
+                msg_pay_error: "Payment error occurred.",
+                msg_no_donations: "No donations yet.",
+
+                memo_prefix: "Donation for: ",
+
+                profile_title: "My Profile",
+                profile_total: "Total Donated",
+                profile_campaigns: "Campaigns Helped",
+                profile_rank: "Global Rank",
+                profile_history: "Donation History",
+
+                /* Category Filters */
+                filter_all: "All",
+                filter_health: "Health",
+                filter_education: "Education",
+                filter_food: "Food",
+                filter_emergency: "Emergency"
+            },
+            ar: {
+                drawer_stats_title: "📊 إحصائيات المنصة",
+                stats_total_donations: "إجمالي التبرعات",
+                stats_total_campaigns: "عدد الحملات",
+                drawer_donors_title: "👤 سجل جميع المتبرعين",
+
+                modal_title_default: "أثر تبرعكم",
+                modal_impact_prefix: "أثر تبرعكم: ",
+                msg_impact_soon: "سيتم رفع صور الأثر قريباً",
+                btn_login: "دخول",
+
+                hero_title: "عطاؤك اليوم.. حياة جديدة لغيرك غداً",
+                heroes_title: "🏆 قائمة أبطال الخير",
+                rank_label: "مركز",
+
+                label_goal: "الهدف:",
+                btn_donate_now: "تبرع الآن",
+                btn_connecting: "جاري الاتصال...",
+                btn_done: "تم التبرع ✅",
+                btn_view_impact: "🖼️ مشاهدة أثر التبرع",
+                placeholder_amount: "0.00",
+
+                msg_login_first: "سجل دخولك أولاً",
+                msg_valid_amount: "أدخل مبلغاً صحيحاً",
+                msg_use_pi_browser: "استخدم متصفح Pi",
+                msg_thanks: "شكراً لك!",
+                msg_pay_error: "حدث خطأ في الدفع",
+                msg_no_donations: "لا توجد تبرعات حتى الآن.",
+
+                memo_prefix: "تبرع لـ: ",
+
+                profile_title: "ملفي الشخصي",
+                profile_total: "إجمالي تبرعاتي",
+                profile_campaigns: "حملات دعمتها",
+                profile_rank: "تصنيفي العالمي",
+                profile_history: "سجل تبرعاتي",
+
+                /* Category Filters */
+                filter_all: "الكل",
+                filter_health: "صحة",
+                filter_education: "تعليم",
+                filter_food: "إطعام",
+                filter_emergency: "طوارئ"
+            }
+        };
+
+        function t(key){
+            return (I18N[currentLang] && I18N[currentLang][key]) ? I18N[currentLang][key] : key;
+        }
+
+        function applyLanguage(){
+            const html = document.documentElement;
+            html.lang = currentLang;
+            html.dir = (currentLang === 'ar') ? 'rtl' : 'ltr';
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+
+            document.getElementById('lang-ball-label').textContent = (currentLang === 'en') ? 'AR' : 'EN';
+
+            renderCamps();
+            if(globalDonorStats.length > 0){
+                renderHeroes(globalDonorStats.slice(0,5));
+            } else {
+                loadData();
+            }
+        }
+
+        function toggleLanguage(){
+            currentLang = (currentLang === 'en') ? 'ar' : 'en';
+            applyLanguage();
+        }
+
+        // دالة تفعيل وتصفية الحملات
+        function filterCampaigns(category, btnElement) {
+            currentCategory = category;
+            
+            // إزالة الكلاس 'active' من كل الأزرار
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            // إضافة الكلاس 'active' للزر المضغوط
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+            
+            renderCamps();
+        }
+
+        // دالة وضع المبلغ السريع في خانة الإدخال
+        function setQuickAmount(campaignId, amount) {
+            document.getElementById(`in-${campaignId}`).value = amount;
+        }
+
+        const onIncompletePaymentFound = async (payment) => {
+            console.log("Incomplete payment found:", payment);
+            try {
+                await fetch('/api/pi/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
+                });
+            } catch (e) { console.error("Error completing pending payment:", e); }
+        };
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('side-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            drawer.classList.toggle('active');
+            overlay.style.display = drawer.classList.contains('active') ? 'block' : 'none';
+            if(drawer.classList.contains('active')) loadGlobalStats();
+        }
+
+        async function loadGlobalStats() {
+            const { data: dons } = await _supabase.from('donations').select('username, amount');
+            const { data: camps } = await _supabase.from('campaigns').select('id');
+            if (dons) {
+                const totalPi = dons.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+                document.getElementById('total-pi-stats').innerText = totalPi.toFixed(2) + " π";
+                document.getElementById('all-donors-list').innerHTML = dons.map(d => `
+                    <div style="background:white; padding:12px; border-radius:15px; display:flex; justify-content:space-between; border:1px solid #eee;">
+                        <span style="font-weight:bold;">@${d.username}</span>
+                        <span style="color:var(--primary-purple); font-weight:700;">${parseFloat(d.amount).toFixed(2)} π</span>
+                    </div>
+                `).reverse().join('');
+            }
+            if (camps) document.getElementById('total-campaigns-stats').innerText = camps.length;
+        }
+
+        function showMsg(text) {
+            const alertBox = document.getElementById('custom-alert');
+            alertBox.innerText = text; 
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+        }
+
+        function openImage(url, title) {
+            if (!url || url === '' || url === 'null') { showMsg(t('msg_impact_soon')); return; }
+            document.getElementById('modal-img-src').src = url;
+            document.getElementById('modal-title').innerText = t('modal_impact_prefix') + title;
+            document.getElementById('image-modal').style.display = 'flex';
+        }
+
+        function closeImage() { document.getElementById('image-modal').style.display = 'none'; }
+
+        async function openProfile() {
+            if (!currentUser) return;
+            
+            document.getElementById('prof-avatar').innerText = currentUser.username.charAt(0).toUpperCase();
+            document.getElementById('profile-username').innerText = '@' + currentUser.username;
+            document.getElementById('prof-history').innerHTML = `<div style="text-align:center; padding:20px; color:#888;">${t('btn_connecting')}</div>`;
+            document.getElementById('profile-modal').style.display = 'flex';
+
+            const { data: userDons } = await _supabase.from('donations')
+                .select('*')
+                .eq('username', currentUser.username)
+                .order('id', { ascending: false });
+
+            if (userDons) {
+                const totalAmount = userDons.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+                const uniqueCamps = new Set(userDons.map(d => d.campaign_id)).size;
+                
+                document.getElementById('prof-total').innerText = totalAmount.toFixed(2) + ' π';
+                document.getElementById('prof-camps').innerText = uniqueCamps;
+
+                const rankIndex = globalDonorStats.findIndex(s => s.username === currentUser.username);
+                document.getElementById('prof-rank').innerText = rankIndex >= 0 ? '#' + (rankIndex + 1) : '-';
+
+                if (userDons.length > 0) {
+                    document.getElementById('prof-history').innerHTML = userDons.map(d => {
+                        const camp = campaigns.find(c => c.id == d.campaign_id);
+                        const campTitle = camp ? camp.title : (t('memo_prefix') + d.campaign_id);
+                        return `
+                        <div class="history-item">
+                            <span class="history-item-title">${campTitle}</span>
+                            <span class="history-item-amount">+${d.amount} π</span>
+                        </div>`;
+                    }).join('');
+                } else {
+                    document.getElementById('prof-history').innerHTML = `<div style="text-align:center; padding:20px; color:#888;">${t('msg_no_donations')}</div>`;
+                }
+            }
+        }
+
+        function closeProfile() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+
+        async function loadData() {
+            const { data: camps } = await _supabase.from('campaigns').select('*').order('id');
+            if (camps) { campaigns = camps; renderCamps(); }
+
+            const { data: dons } = await _supabase.from('donations').select('username, amount');
+            if (dons) {
+                const totals = dons.reduce((acc, curr) => {
+                    acc[curr.username] = (acc[curr.username] || 0) + parseFloat(curr.amount);
+                    return acc;
+                }, {});
+                globalDonorStats = Object.entries(totals)
+                    .map(([username, total]) => ({ username, total }))
+                    .sort((a,b) => b.total - a.total);
+                    
+                renderHeroes(globalDonorStats.slice(0,5));
+            }
+        }
+
+        function renderCamps() {
+            const container = document.getElementById('campaigns-container');
+            
+            // تطبيق الفلتر على المصفوفة بناءً على الفئة المختارة
+            const filteredCampaigns = currentCategory === 'all' 
+                ? campaigns 
+                : campaigns.filter(c => c.category === currentCategory);
+
+            if (filteredCampaigns.length === 0) {
+                 container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888; background: white; border-radius: 20px;">لا توجد حملات في هذا التصنيف حالياً.</div>`;
+                 return;
+            }
+
+            container.innerHTML = filteredCampaigns.map(c => {
+                const progress = Math.min(((c.current_amount || 0) / c.target_amount) * 100, 100);
+                return `
+                    <div class="card">
+                        <img src="${c.image_url || 'https://via.placeholder.com/400x200'}" class="campaign-img">
+                        <h3>${c.title}</h3>
+
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; font-weight:bold;">
+                            <span style="color:var(--primary-purple)">${c.current_amount || 0} π</span>
+                            <span style="color:#bbb">${t('label_goal')} ${c.target_amount} π</span>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${progress}%"></div>
+                        </div>
+
+                        <div class="quick-amounts">
+                            <button class="quick-btn" onclick="setQuickAmount(${c.id}, 1)">1 π</button>
+                            <button class="quick-btn" onclick="setQuickAmount(${c.id}, 5)">5 π</button>
+                            <button class="quick-btn" onclick="setQuickAmount(${c.id}, 10)">10 π</button>
+                        </div>
+
+                        <input type="number" id="in-${c.id}" class="amount-input" placeholder="${t('placeholder_amount')}">
+
+                        <div class="btn-group">
+                            <button id="btn-${c.id}" class="donate-btn" onclick="handleDonate(${c.id})">${t('btn_donate_now')}</button>
+                            <button class="result-btn" onclick="openImage('${c.result_image_url}', '${c.title}')">${t('btn_view_impact')}</button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderHeroes(heroes) {
+            document.getElementById('heroes-container').innerHTML = heroes.map((h, i) => `
+                <div class="hero-card rank-${i+1}">
+                    <div class="rank-tag">${t('rank_label')} ${i+1}</div>
+                    <div class="hero-avatar">${h.username.charAt(0).toUpperCase()}</div>
+                    <div class="hero-name">@${h.username}</div>
+                    <div class="hero-amount">${h.total.toFixed(2)} π</div>
+                </div>`).join('');
+        }
+
+        async function login() {
+            try {
+                const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+                currentUser = auth.user;
+
+                document.getElementById('login-button').style.display = 'none';
+                document.getElementById('user-pill').style.display = 'flex';
+                document.getElementById('username-display').textContent = currentUser.username;
+            } catch (e) {
+                showMsg(t('msg_use_pi_browser'));
+            }
+        }
+
+        async function recordDonation(amount, campaignId) {
+            await _supabase.from('donations').insert([{
+                pi_user_id: currentUser.uid,
+                username: currentUser.username,
+                amount,
+                campaign_id: campaignId
+            }]);
+
+            const camp = campaigns.find(c => c.id == campaignId);
+            await _supabase.from('campaigns')
+                .update({ current_amount: (parseFloat(camp.current_amount) || 0) + amount })
+                .eq('id', campaignId);
+
+            loadData();
+        }
+
+        function handleDonate(id) {
+            if (!currentUser) return showMsg(t('msg_login_first'));
+
+            const btn = document.getElementById(`btn-${id}`);
+            const input = document.getElementById(`in-${id}`);
+            const amt = parseFloat(input.value);
+
+            if (!amt || amt <= 0) return showMsg(t('msg_valid_amount'));
+
+            btn.disabled = true;
+            btn.innerText = t('btn_connecting');
+            document.getElementById('main-loader').style.display = 'block';
+
+            const campTitle = (campaigns.find(c => c.id == id) || {}).title || '';
+
+            Pi.createPayment({
+                amount: amt,
+                memo: `${t('memo_prefix')}${campTitle}`,
+                metadata: { campaignId: id }
+            }, {
+                onReadyForServerApproval: (payId) => fetch('/api/pi/approve', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ paymentId: payId })
+                }),
+
+                onReadyForServerCompletion: (payId, tx) => fetch('/api/pi/complete', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ paymentId: payId, txid: tx })
+                }).then(() => { 
+                    recordDonation(amt, id); 
+                    resetButton(btn, t('btn_done'));
+                    showMsg(t('msg_thanks'));
+                }),
+
+                onCancel: () => resetButton(btn, t('btn_donate_now')),
+
+                onError: (e) => { 
+                    resetButton(btn, t('btn_donate_now')); 
+                    showMsg(t('msg_pay_error')); 
+                }
+            });
+        }
+
+        function resetButton(btn, text) {
+            btn.disabled = false;
+            btn.innerText = text;
+            document.getElementById('main-loader').style.display = 'none';
+            // تفريغ خانة الإدخال بعد نجاح التبرع
+            if (text === t('btn_done')) {
+                const inputId = btn.id.replace('btn-', 'in-');
+                document.getElementById(inputId).value = '';
+            }
+        }
+
+        window.onload = () => {
+            Pi.init({version:"2.0"});
+            applyLanguage();
+        };
+    </script>
+</body>
+</html>
