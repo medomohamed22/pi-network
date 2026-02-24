@@ -35,7 +35,6 @@ exports.handler = async (event) => {
     const token = new StellarSdk.Asset(assetCode, issuerKP.publicKey());
     const pi = StellarSdk.Asset.native();
     
-    // --- Liquidity pool asset (Token/Pi) ---
     if (!StellarSdk.LiquidityPoolAsset || !StellarSdk.Operation.liquidityPoolDeposit) {
       return {
         statusCode: 500,
@@ -46,17 +45,30 @@ exports.handler = async (event) => {
       };
     }
     
-    // fee ثابت 30 bps في Stellar pools
-    const poolAsset = new StellarSdk.LiquidityPoolAsset(token, pi, StellarSdk.LiquidityPoolFeeV18 || 30);
+    const fee = StellarSdk.LiquidityPoolFeeV18 || 30;
     
-    // pool share asset (لازم Trustline)
+    // الحل هنا: ترتيب العملات بشكل صحيح قبل إنشاء البول
+    let assetA, assetB, maxAmountA, maxAmountB;
+    
+    if (token.compareTo(pi) < 0) {
+        assetA = token;
+        assetB = pi;
+        maxAmountA = String(tokenAmount);
+        maxAmountB = String(piAmount);
+    } else {
+        assetA = pi;
+        assetB = token;
+        maxAmountA = String(piAmount);
+        maxAmountB = String(tokenAmount);
+    }
+
+    const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, fee);
     const poolId = poolAsset.getLiquidityPoolId();
     const poolShare = new StellarSdk.LiquidityPoolShareAsset(poolId);
     
     const account = await server.loadAccount(distKP.publicKey());
     const baseFee = await server.fetchBaseFee();
     
-    // نفحص هل في trustline للـ poolShare
     const hasPoolShare = account.balances?.some(b => b.asset_type === "liquidity_pool_shares" && b.liquidity_pool_id === poolId);
     
     const txb = new StellarSdk.TransactionBuilder(account, {
@@ -68,14 +80,13 @@ exports.handler = async (event) => {
       txb.addOperation(StellarSdk.Operation.changeTrust({ asset: poolShare }));
     }
     
-    // حماية سعرية واسعة افتراضيًا
     const minP = (minPrice && String(minPrice)) || "0.000001";
     const maxP = (maxPrice && String(maxPrice)) || "1000000";
     
     txb.addOperation(StellarSdk.Operation.liquidityPoolDeposit({
       liquidityPoolId: poolId,
-      maxAmountA: String(tokenAmount),
-      maxAmountB: String(piAmount),
+      maxAmountA: maxAmountA,
+      maxAmountB: maxAmountB,
       minPrice: minP,
       maxPrice: maxP,
     }));
@@ -94,6 +105,7 @@ exports.handler = async (event) => {
       })
     };
   } catch (e) {
+    console.error("AMM Deposit Error:", e);
     return { statusCode: 500, body: JSON.stringify({ error: e.message || String(e) }) };
   }
 };
