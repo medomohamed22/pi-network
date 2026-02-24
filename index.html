@@ -32,7 +32,7 @@
             border-radius: 20px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
             width: 100%; 
-            max-width: 850px; /* تم التوسيع لاستيعاب الحقول */
+            max-width: 850px; 
         }
 
         h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
@@ -77,7 +77,7 @@
 
         /* Section dividers */
         .section-divider {
-            border: 0; border-top: 2px dashed #f3f4f6; margin: 2rem 0;
+            border: 0; border-top: 2px dashed #e5e7eb; margin: 2rem 0;
         }
         h3.section-title {
             color: #4b5563; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
@@ -124,12 +124,12 @@
             <button class="tab-btn active" onclick="switchTab('dash', this)">لوحة القيادة</button>
             <button class="tab-btn" onclick="switchTab('ops', this)">العمليات والسيولة</button>
             <button class="tab-btn" onclick="switchTab('market', this)">مستكشف السوق</button>
-            <button class="tab-btn" onclick="switchTab('domain', this)">التوثيق (pi.toml)</button>
+            <button class="tab-btn" onclick="switchTab('domain', this)">التوثيق وربط الدومين</button>
         </div>
 
         <div id="dash" class="form-section active">
             <div class="alert">
-                ⚠️ <strong>تنبيه:</strong> يجب إدخال "باسورد الأدمن" لتنفيذ أي عملية طباعة أو إضافة سيولة.
+                ⚠️ <strong>تنبيه:</strong> يجب إدخال "باسورد الأدمن" لتنفيذ أي عملية (طباعة، سيولة، ربط دومين).
             </div>
             
             <div class="row">
@@ -250,7 +250,7 @@
         </div>
 
         <div id="domain" class="form-section">
-            <h3 class="section-title">🌐 مولد ملف pi.toml</h3>
+            <h3 class="section-title">🌐 مولد ملف التوثيق (pi.toml)</h3>
             
             <div class="row">
                 <div class="form-group">
@@ -290,11 +290,31 @@
                 <input type="text" id="verDesc" value="Donate Way token on Pi Testnet for donations.">
             </div>
 
-            <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد الكود</button>
+            <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد كود pi.toml</button>
             
             <div class="form-group">
-                <label>الكود الناتج (انسخه في ملف .well-known/pi.toml)</label>
+                <label>الكود الناتج (انسخه وضعه في مسار .well-known/pi.toml)</label>
                 <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace;"></textarea>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3 class="section-title">🔗 ربط الدومين بالعملة (Set Home Domain)</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>الدومين المراد ربطه (بدون https://)</label>
+                    <input type="text" id="hdDomain" value="testapp2026.netlify.app">
+                    <span class="hint">سيتم تعيين هذا الدومين كـ home_domain لحساب المُصدر (Issuer).</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="btnSetHomeDomain" class="btn btn-secondary">🔗 تنفيذ الربط</button>
+                <button id="btnGetIssuerInfo" class="btn">🔍 فحص الدومين المربوط حالياً</button>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1rem;">
+                <textarea id="homeDomainOut" readonly style="background: #111827; color: #60a5fa; direction: ltr; font-family: monospace; min-height: 80px; padding: 10px; border-radius: 8px;" placeholder="نتيجة الفحص والربط ستظهر هنا..."></textarea>
             </div>
         </div>
 
@@ -462,6 +482,69 @@ image="${image}"
 
                 document.getElementById("tomlOut").value = tomlString;
                 log("✅ تم توليد محتوى ملف pi.toml بنجاح (راجع التبويبة).");
+            });
+        }
+
+        // 5. ربط الدومين (Set Home Domain)
+        const btnSetHomeDomain = document.getElementById("btnSetHomeDomain");
+        if (btnSetHomeDomain) {
+            btnSetHomeDomain.addEventListener("click", async () => {
+                const domain = document.getElementById("hdDomain").value.trim();
+                const adminToken = document.getElementById("adminToken").value.trim();
+                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+
+                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب (يُرجى إدخاله في لوحة القيادة).");
+                if (!domain) return log("❌ خطأ: يرجى كتابة الدومين المراد ربطه.");
+
+                try {
+                    log(`⏳ جاري ربط الدومين (${domain}) بحساب المُصدر...`);
+                    document.getElementById("homeDomainOut").value = "جاري الاتصال بالخادم...";
+                    
+                    // تأكد إنك تمتلك دالة backend جاهزة في مسار set_domain
+                    const data = await apiPost("/.netlify/functions/set_domain", {
+                        domain: domain,
+                        assetCode: assetCode
+                    }, adminToken);
+                    
+                    log("✅ تم ربط الدومين بنجاح:", data);
+                    document.getElementById("homeDomainOut").value = "تم الربط بنجاح:\n" + JSON.stringify(data, null, 2);
+                } catch (e) {
+                    log("❌ فشل ربط الدومين:", e.message || e);
+                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
+                }
+            });
+        }
+
+        // 6. فحص الدومين المربوط (Check Issuer Info)
+        const btnGetIssuerInfo = document.getElementById("btnGetIssuerInfo");
+        if (btnGetIssuerInfo) {
+            btnGetIssuerInfo.addEventListener("click", async () => {
+                const issuerPub = document.getElementById("verIssuer").value.trim() || document.getElementById("issuerPub").value.trim();
+                
+                if (!issuerPub) {
+                    return log("❌ خطأ: يرجى كتابة المفتاح العام للمُصدر في خانة (Issuer Public Key) أولاً.");
+                }
+
+                try {
+                    log(`⏳ جاري جلب بيانات حساب المُصدر من شبكة Pi...`);
+                    document.getElementById("homeDomainOut").value = "جاري الاتصال بـ Horizon API...";
+                    
+                    const res = await fetch(`https://api.testnet.minepi.com/accounts/${issuerPub}`);
+                    if (!res.ok) throw new Error("الحساب غير موجود أو لم يتم تفعيله بعد.");
+                    
+                    const data = await res.json();
+                    
+                    if (data.home_domain) {
+                        log(`✅ الدومين المربوط حالياً بهذا الحساب هو: ${data.home_domain}`);
+                        document.getElementById("homeDomainOut").value = `الدومين المربوط حالياً:\n${data.home_domain}\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
+                    } else {
+                        log(`⚠️ لا يوجد أي دومين (home_domain) مربوط بهذا الحساب حتى الآن.`);
+                        document.getElementById("homeDomainOut").value = `لا يوجد دومين مربوط.\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
+                    }
+                } catch (e) {
+                    log("❌ فشل فحص الحساب:", e.message || e);
+                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
+                }
             });
         }
 
