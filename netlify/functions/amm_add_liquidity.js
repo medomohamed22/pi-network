@@ -37,24 +37,27 @@ exports.handler = async (event) => {
     
     const fee = StellarSdk.LiquidityPoolFeeV18 || 30;
     
-    // Pi is Native, so it's ALWAYS Asset A
+    // عملة Pi دايماً Asset A لأن نوعها Native
     const assetA = pi;
     const assetB = token;
     
     const maxAmountA = String(piAmount);
     const maxAmountB = String(tokenAmount);
 
-    // 1. تجهيز الكائن الخاص بمجمع السيولة لعمل خط الثقة (Trustline)
-    const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, fee);
-    
-    // 2. استخراج الـ Pool ID بالطريقة الصحيحة المدعومة في stellar-sdk v12
-    const poolIdBuffer = StellarSdk.getLiquidityPoolId("constant_product", assetA, assetB, fee);
+    // 1. التعديل هنا: تمرير البيانات ككائن (Object) لدالة getLiquidityPoolId
+    const poolIdBuffer = StellarSdk.getLiquidityPoolId("constant_product", {
+      assetA: assetA,
+      assetB: assetB,
+      fee: fee
+    });
     const poolId = poolIdBuffer.toString("hex");
+    
+    // 2. تجهيز مجمع السيولة لخط الثقة
+    const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, fee);
     
     const account = await server.loadAccount(distKP.publicKey());
     const baseFee = await server.fetchBaseFee();
     
-    // فحص إذا كان الحساب يمتلك بالفعل خط ثقة مع مجمع السيولة هذا
     const hasPoolShare = account.balances?.some(
       b => b.asset_type === "liquidity_pool_shares" && b.liquidity_pool_id === poolId
     );
@@ -64,7 +67,6 @@ exports.handler = async (event) => {
       networkPassphrase: NETWORK_PASSPHRASE,
     });
     
-    // إذا لم يكن هناك خط ثقة (Trustline) للـ Pool، قم بإضافته باستخدام poolAsset
     if (!hasPoolShare) {
       txb.addOperation(StellarSdk.Operation.changeTrust({ asset: poolAsset }));
     }
@@ -72,7 +74,6 @@ exports.handler = async (event) => {
     const minP = (minPrice && String(minPrice)) || "0.0000001";
     const maxP = (maxPrice && String(maxPrice)) || "10000000";
     
-    // عملية الإيداع (Deposit)
     txb.addOperation(StellarSdk.Operation.liquidityPoolDeposit({
       liquidityPoolId: poolId,
       maxAmountA: maxAmountA,
