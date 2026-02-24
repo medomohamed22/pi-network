@@ -150,3 +150,47 @@ if (btnAddAmm) {
 }
 
 log("✅ Dashboard Initialized. Admin Mode Active.");
+/** Generate pi.toml */
+const btnGenPiToml = $("btnGenPiToml");
+if (btnGenPiToml) {
+  btnGenPiToml.addEventListener("click", () => {
+    const domain = $("verDomain").value.trim();
+    const issuer = $("verIssuer").value.trim();
+    const assetCode = $("verAssetCode").value.trim();
+    const image = $("verImage").value.trim();
+    const orgName = $("verOrgName").value.trim();
+    const orgUrl = $("verOrgUrl").value.trim();
+    const desc = $("verDesc").value.trim();
+
+    if (!issuer || !assetCode) {
+      log("❌ لازم تكتب الـ Issuer Public Key والـ Asset Code");
+      return;
+    }
+
+    const tomlString = `
+# Network Info
+NETWORK_PASSPHRASE="Pi Testnet"
+HORIZON_URL="https://api.testnet.minepi.com"
+
+# Organization Info
+ORG_NAME="${orgName}"
+ORG_URL="${orgUrl}"
+ORG_DESCRIPTION="${desc}"
+ORG_LOGO="${image}"
+
+# Token Info
+[[CURRENCIES]]
+code="${assetCode}"
+issuer="${issuer}"
+display_decimals=7
+name="${orgName} Token"
+desc="${desc}"
+image="${image}"
+`.trim();
+
+    $("tomlOut").value = tomlString;
+    log("✅ تم توليد محتوى ملف pi.toml بنجاح.");
+  });
+}
+
+
