@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Donate Way — Token / DEX / AMM Dashboard (Pi Testnet)</title>
-
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <title>Donate Way — Admin Dashboard (Pi Testnet)</title>
 
   <style>
     :root{
@@ -71,7 +69,7 @@
     }
 
     .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:980px){.grid{grid-template-columns:1.2fr .8fr}}
+    @media(min-width:980px){.grid{grid-template-columns:1fr}}
     .grid2{display:grid;grid-template-columns:1fr;gap:12px}
     @media(min-width:980px){.grid2{grid-template-columns:1fr 1fr}}
 
@@ -113,6 +111,7 @@
       border-color:rgba(127,92,255,.75);
     }
     button:hover{transform:translateY(-1px)}
+    
     .pill{
       padding:6px 10px;border-radius:999px;
       border:1px solid rgba(255,255,255,.14);
@@ -120,9 +119,6 @@
       font-size:12px;color:var(--muted);
       display:inline-flex;gap:8px;align-items:center;
     }
-    .dot{width:8px;height:8px;border-radius:999px;background:var(--warn)}
-    .dot.good{background:var(--good)}
-    .dot.bad{background:var(--bad)}
 
     pre{
       margin:0; padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
@@ -134,7 +130,6 @@
     .page.active{display:block}
     .muted{color:var(--muted);font-size:12px;line-height:1.6}
     .warn{color:#ffd08a}
-    .goodtxt{color:#7CFFB0}
   </style>
 </head>
 <body>
@@ -145,16 +140,13 @@
           <img src="/token_256.png" onerror="this.src='/token.png'" alt="DW">
         </div>
         <div class="title">
-          <b>Donate Way — Dashboard</b>
+          <b>Donate Way — Admin Dashboard</b>
           <span>Pi Testnet — Token / DEX / AMM / Domain</span>
         </div>
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <div class="pill"><span class="dot" id="dotSdk"></span> SDK: <span id="sdkConnected">—</span></div>
-        <div class="pill">User: <span id="sdkUser">—</span></div>
-        <button class="primary" id="btnInit">Init SDK</button>
-        <button id="btnAuth">Login</button>
+        <div class="pill" style="border-color:var(--warn); color:var(--warn)">وضع المسؤول فقط (Admin Mode)</div>
       </div>
     </div>
 
@@ -176,18 +168,18 @@
                 <input id="assetCode" value="DONATEWAY" />
               </div>
               <div>
-                <label>Issuer Public Key</label>
-                <input id="issuerPub" placeholder="GBQ3H..." />
+                <label>Admin Password (مهم للعمليات)</label>
+                <input id="adminToken" type="password" placeholder="أدخل باسورد الأدمن هنا..." />
               </div>
             </div>
             <div class="row">
               <div>
-                <label>Distributor Public Key</label>
-                <input id="distPub" placeholder="GCLLM..." />
+                <label>Issuer Public Key</label>
+                <input id="issuerPub" placeholder="GBQ3H..." />
               </div>
               <div>
-                <label>Admin Token (اختياري)</label>
-                <input id="adminToken" placeholder="ADMIN_TOKEN" />
+                <label>Distributor Public Key</label>
+                <input id="distPub" placeholder="GCLLM..." />
               </div>
             </div>
 
@@ -202,30 +194,10 @@
         </div>
 
         <div class="card">
-          <div class="hd"><b>Pi Payments (Donate)</b><span>Pi SDK</span></div>
+          <div class="hd"><b>Logs</b><span>frontend</span></div>
           <div class="bd">
-            <div class="row">
-              <div>
-                <label>Amount (π)</label>
-                <input id="donAmount" value="1" />
-              </div>
-              <div>
-                <label>Memo</label>
-                <input id="donMemo" value="Donate Way — Donation" />
-              </div>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnDonate">Donate</button>
-            </div>
-            <pre id="payLog"></pre>
+            <pre id="log"></pre>
           </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><b>Logs</b><span>frontend</span></div>
-        <div class="bd">
-          <pre id="log"></pre>
         </div>
       </div>
     </div>
@@ -299,47 +271,6 @@
             <pre id="poolOut"></pre>
           </div>
         </div>
-
-        <div class="card" style="grid-column:1/-1">
-          <div class="hd"><b>Execute Tiny Trade (Real Activity)</b><span>Server: pathPaymentStrictSend</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Destination (Your Wallet G... must trust DONATEWAY)</label>
-                <input id="tinyDest" placeholder="G..." />
-              </div>
-              <div>
-                <label>Send PI Amount (tiny)</label>
-                <input id="tinySendPi" value="0.1" />
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label>Dest Min Token Out (optional)</label>
-                <input id="tinyMinOut" placeholder="0 (default)" />
-              </div>
-              <div>
-                <label>Memo (optional)</label>
-                <input id="tinyMemo" value="DW tiny trade" />
-              </div>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnTinyTrade">Execute Tiny Trade</button>
-            </div>
-            <pre id="tinyOut"></pre>
-            <div class="muted warn">
-              ده بيعمل صفقة فعلية (Trade) لو فيه Path في AMM/Orderbook.
-              لو فشل غالبًا: مفيش path أو destination مش عامل trustline.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><b>Market Logs</b><span>frontend</span></div>
-        <div class="bd">
-          <pre id="marketLog"></pre>
-        </div>
       </div>
     </div>
 
@@ -359,7 +290,7 @@
               </div>
             </div>
             <div class="btns">
-              <button class="primary" id="btnBootstrap">Bootstrap</button>
+              <button class="primary" id="btnBootstrap">Bootstrap (إنشاء العملة)</button>
             </div>
             <pre id="bootOut"></pre>
           </div>
@@ -425,39 +356,6 @@
           </div>
         </div>
       </div>
-      <div class="card" style="grid-column:1/-1">
-  <div class="hd"><b>AMM Withdraw Liquidity</b><span>Redeem pool shares</span></div>
-  <div class="bd">
-    <div class="row">
-      <div>
-        <label>Pool Shares to Withdraw</label>
-        <input id="ammShares" value="1" />
-      </div>
-      <div>
-        <label>Min PI out (optional)</label>
-        <input id="ammMinPiOut" placeholder="0" />
-      </div>
-    </div>
-    <div class="row">
-      <div>
-        <label>Min Token out (optional)</label>
-        <input id="ammMinTokenOut" placeholder="0" />
-      </div>
-      <div style="display:flex;align-items:end;gap:8px;flex-wrap:wrap">
-        <button class="primary" id="btnWithdrawAmm">Withdraw</button>
-        <button id="btnPoolInfo2">Refresh Pool Info</button>
-      </div>
-    </div>
-    <pre id="ammWithdrawOut"></pre>
-  </div>
-</div>
-
-      <div class="card">
-        <div class="hd"><b>Ops Logs</b><span>frontend</span></div>
-        <div class="bd">
-          <pre id="opsLog"></pre>
-        </div>
-      </div>
     </div>
 
     <div class="page" id="page-domain">
@@ -500,41 +398,18 @@
 
             <div class="btns">
               <button class="primary" id="btnGenPiToml">Generate</button>
-              <button id="btnCheckDomainAll">Run Checklist</button>
             </div>
 
             <label>Generated pi.toml</label>
             <textarea id="tomlOut"></textarea>
 
-            <pre id="domainOut"></pre>
           </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>Home Domain</b><span>Issuer home_domain</span></div>
-          <div class="bd">
-            <label>Home Domain (hostname فقط)</label>
-            <input id="hdDomain" value="testapp2026.netlify.app" />
-            <div class="btns">
-              <button id="btnSetHomeDomain">Set home_domain</button>
-              <button class="primary" id="btnGetIssuerInfo">Check issuer info</button>
-            </div>
-            <pre id="homeDomainOut"></pre>
-            <div class="muted warn">لو عندك Redirect عام للـ SPA لازم تستثني /.well-known/*</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="hd"><b>Domain Logs</b><span>frontend</span></div>
-        <div class="bd">
-          <pre id="domainLog"></pre>
         </div>
       </div>
     </div>
 
     <footer class="muted" style="text-align:center;padding:8px">
-      Testnet فقط — الأسرار في Netlify env — لا تضع secrets في الفرونت.
+      Admin Dashboard — Testnet Only
     </footer>
 
     <script src="./app.js"></script>
