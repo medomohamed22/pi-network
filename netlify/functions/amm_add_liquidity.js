@@ -47,20 +47,13 @@ exports.handler = async (event) => {
     
     const fee = StellarSdk.LiquidityPoolFeeV18 || 30;
     
-    // الحل هنا: ترتيب العملات بشكل صحيح قبل إنشاء البول
-    let assetA, assetB, maxAmountA, maxAmountB;
+    // الحل الأكيد: عملة Pi دايماً هي Asset A لأن نوعها Native
+    const assetA = pi;
+    const assetB = token;
     
-    if (token.compareTo(pi) < 0) {
-        assetA = token;
-        assetB = pi;
-        maxAmountA = String(tokenAmount);
-        maxAmountB = String(piAmount);
-    } else {
-        assetA = pi;
-        assetB = token;
-        maxAmountA = String(piAmount);
-        maxAmountB = String(tokenAmount);
-    }
+    // بالتالي الكميات لازم تترتب بناءً على العملات
+    const maxAmountA = String(piAmount);
+    const maxAmountB = String(tokenAmount);
 
     const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, fee);
     const poolId = poolAsset.getLiquidityPoolId();
@@ -80,8 +73,9 @@ exports.handler = async (event) => {
       txb.addOperation(StellarSdk.Operation.changeTrust({ asset: poolShare }));
     }
     
-    const minP = (minPrice && String(minPrice)) || "0.000001";
-    const maxP = (maxPrice && String(maxPrice)) || "1000000";
+    // ضبط حماية الأسعار الافتراضية بنطاق واسع لتجنب رفض المعاملة
+    const minP = (minPrice && String(minPrice)) || "0.0000001";
+    const maxP = (maxPrice && String(maxPrice)) || "10000000";
     
     txb.addOperation(StellarSdk.Operation.liquidityPoolDeposit({
       liquidityPoolId: poolId,
@@ -106,6 +100,8 @@ exports.handler = async (event) => {
     };
   } catch (e) {
     console.error("AMM Deposit Error:", e);
-    return { statusCode: 500, body: JSON.stringify({ error: e.message || String(e) }) };
+    // جلب التفاصيل من السيرفر لو موجودة عشان تساعد في فهم أي مشكلة تانية
+    const errorDetails = e.response && e.response.data ? e.response.data : e.message || String(e);
+    return { statusCode: 500, body: JSON.stringify({ error: errorDetails }) };
   }
 };
