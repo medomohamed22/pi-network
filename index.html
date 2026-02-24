@@ -1,418 +1,471 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Donate Way — Admin Dashboard (Pi Testnet)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Way — Admin Dashboard (Pi Testnet)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #6a1b9a; 
+            --secondary: #fb8c00; 
+            --bg: #f3f4f6; 
+            --text: #1f2937; 
+            --border: #e5e7eb;
+        }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            padding: 2rem 1rem;
+            box-sizing: border-box;
+        }
+        
+        .container { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 850px; /* تم التوسيع لاستيعاب الحقول */
+        }
 
-  <style>
-    :root{
-      --bg:#0b0b14;
-      --card:rgba(255,255,255,.08);
-      --card2:rgba(255,255,255,.06);
-      --stroke:rgba(255,255,255,.14);
-      --text:#fff;
-      --muted:rgba(255,255,255,.72);
-      --primary:#7f5cff;
-      --primary2:#a78bfa;
-      --good:#22c55e;
-      --bad:#ef4444;
-      --warn:#f59e0b;
-      --shadow: 0 16px 40px rgba(0,0,0,.35);
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; min-height:100vh; color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:
-        radial-gradient(1000px 500px at 20% -10%, rgba(127,92,255,.35), transparent 60%),
-        radial-gradient(800px 500px at 100% 20%, rgba(167,139,250,.25), transparent 55%),
-        linear-gradient(180deg, #070712, #0b0b14 40%, #070712);
-      padding:14px;
-    }
-    .wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
+        p.subtitle { text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-    .top{
-      padding:14px;
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-    }
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{
-      width:44px;height:44px;border-radius:14px;border:1px solid var(--stroke);
-      background:rgba(255,255,255,.08); overflow:hidden; display:grid; place-items:center;
-    }
-    .logo img{width:100%;height:100%;object-fit:cover}
-    .title{display:flex;flex-direction:column;gap:2px}
-    .title b{font-size:15px}
-    .title span{font-size:12px;color:var(--muted)}
+        /* Tabs Styling */
+        .tabs { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            margin-bottom: 2rem; background: #f9fafb; padding: 5px; 
+            border-radius: 12px; border: 1px solid var(--border);
+        }
+        .tab-btn {
+            flex: 1; min-width: 120px; padding: 12px; border: none; background: transparent; 
+            font-family: inherit; font-weight: bold; cursor: pointer; 
+            border-radius: 8px; transition: 0.3s; color: #6b7280; font-size: 0.95rem;
+        }
+        .tab-btn.active { 
+            background: white; color: var(--primary); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
 
-    .tabs{
-      display:flex;gap:8px;flex-wrap:wrap;
-      padding:10px;border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06);border-radius:var(--radius);
-    }
-    .tab{
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;border-radius:14px;font-size:13px;cursor:pointer;
-      transition:.15s; user-select:none;
-    }
-    .tab.active{
-      background:linear-gradient(135deg, rgba(127,92,255,.35), rgba(255,255,255,.08));
-      border-color:rgba(127,92,255,.55);
-    }
+        .form-section { display: none; animation: fadeIn 0.4s ease; }
+        .form-section.active { display: block; }
 
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:980px){.grid{grid-template-columns:1fr}}
-    .grid2{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:980px){.grid2{grid-template-columns:1fr 1fr}}
+        /* Grid for side-by-side inputs */
+        .row { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 1.2rem; }
+        @media(min-width: 600px) { .row { grid-template-columns: 1fr 1fr; } }
 
-    .card{
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .hd{
-      padding:12px 12px 10px;border-bottom:1px solid rgba(255,255,255,.10);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-    }
-    .hd b{font-size:14px}
-    .hd span{font-size:12px;color:var(--muted)}
-    .bd{padding:12px;display:flex;flex-direction:column;gap:10px}
+        .form-group { text-align: right; margin-bottom: 1.2rem;}
+        .row .form-group { margin-bottom: 0; }
+        
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #374151; font-size: 0.9rem;}
+        input, select, textarea { 
+            width: 100%; padding: 12px; border: 2px solid var(--border); 
+            border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
+            transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--secondary); outline: none; }
+        textarea { min-height: 120px; resize: vertical; }
+        
+        .hint { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
 
-    .row{display:grid;grid-template-columns:1fr;gap:10px}
-    @media(min-width:720px){.row{grid-template-columns:1fr 1fr}}
+        /* Section dividers */
+        .section-divider {
+            border: 0; border-top: 2px dashed #f3f4f6; margin: 2rem 0;
+        }
+        h3.section-title {
+            color: #4b5563; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
+        }
 
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    input, textarea, select{
-      width:100%; padding:12px;
-      border-radius:14px; border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.20); color:var(--text); outline:none;
-    }
-    textarea{min-height:130px;resize:vertical}
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem; }
+        .btn { 
+            background: #f3f4f6; color: #374151; border: 1px solid var(--border); 
+            padding: 12px 20px; border-radius: 10px; font-size: 0.95rem; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; font-family: inherit; flex: 1; min-width: 150px;
+        }
+        .btn:hover { background: #e5e7eb; }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #4a148c); color: white; border: none; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(106, 27, 154, 0.2); }
+        
+        .btn-secondary { background: linear-gradient(135deg, var(--secondary), #e65100); color: white; border: none; }
+        .btn-secondary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(251, 140, 0, 0.2); }
 
-    .btns{display:flex;gap:8px;flex-wrap:wrap}
-    button{
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,255,255,.07);
-      color:var(--text);
-      padding:11px 12px;border-radius:14px;cursor:pointer;transition:.15s;font-size:13px;
-    }
-    button.primary{
-      background:linear-gradient(135deg, rgba(127,92,255,.9), rgba(167,139,250,.65));
-      border-color:rgba(127,92,255,.75);
-    }
-    button:hover{transform:translateY(-1px)}
-    
-    .pill{
-      padding:6px 10px;border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      font-size:12px;color:var(--muted);
-      display:inline-flex;gap:8px;align-items:center;
-    }
+        /* Output / Logs */
+        .log-box {
+            margin-top: 1.5rem; padding: 1rem; border-radius: 10px; font-size: 0.85rem; 
+            text-align: left; direction: ltr; background: #111827; color: #10b981; 
+            font-family: monospace; white-space: pre-wrap; word-break: break-all;
+            max-height: 250px; overflow-y: auto; border: 4px solid #374151;
+        }
 
-    pre{
-      margin:0; padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.25); overflow:auto; color:rgba(255,255,255,.92);
-      font-size:12px; line-height:1.45; white-space:pre-wrap; word-break:break-word;
-    }
+        .alert {
+            background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
+            font-size: 0.85rem; color: #92400e; border: 1px solid #fcd34d; line-height: 1.5;
+        }
 
-    .page{display:none}
-    .page.active{display:block}
-    .muted{color:var(--muted);font-size:12px;line-height:1.6}
-    .warn{color:#ffd08a}
-  </style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo">
-          <img src="/token_256.png" onerror="this.src='/token.png'" alt="DW">
+
+    <div class="container">
+        <h1>مدير الأصول (Pi Network)</h1>
+        <p class="subtitle">لوحة تحكم المسؤول — إدارة العملة، السوق، والسيولة (Testnet)</p>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dash', this)">لوحة القيادة</button>
+            <button class="tab-btn" onclick="switchTab('ops', this)">العمليات والسيولة</button>
+            <button class="tab-btn" onclick="switchTab('market', this)">مستكشف السوق</button>
+            <button class="tab-btn" onclick="switchTab('domain', this)">التوثيق (pi.toml)</button>
         </div>
-        <div class="title">
-          <b>Donate Way — Admin Dashboard</b>
-          <span>Pi Testnet — Token / DEX / AMM / Domain</span>
-        </div>
-      </div>
 
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <div class="pill" style="border-color:var(--warn); color:var(--warn)">وضع المسؤول فقط (Admin Mode)</div>
-      </div>
-    </div>
-
-    <div class="tabs">
-      <div class="tab active" data-page="dash">Dashboard</div>
-      <div class="tab" data-page="market">Market Explorer</div>
-      <div class="tab" data-page="ops">Token Ops</div>
-      <div class="tab" data-page="domain">Domain Verification</div>
-    </div>
-
-    <div class="page active" id="page-dash">
-      <div class="grid">
-        <div class="card">
-          <div class="hd"><b>Quick Status</b><span>Issuer / Distributor / Asset</span></div>
-          <div class="bd">
+        <div id="dash" class="form-section active">
+            <div class="alert">
+                ⚠️ <strong>تنبيه:</strong> يجب إدخال "باسورد الأدمن" لتنفيذ أي عملية طباعة أو إضافة سيولة.
+            </div>
+            
             <div class="row">
-              <div>
-                <label>Asset Code</label>
-                <input id="assetCode" value="DONATEWAY" />
-              </div>
-              <div>
-                <label>Admin Password (مهم للعمليات)</label>
-                <input id="adminToken" type="password" placeholder="أدخل باسورد الأدمن هنا..." />
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label>Issuer Public Key</label>
-                <input id="issuerPub" placeholder="GBQ3H..." />
-              </div>
-              <div>
-                <label>Distributor Public Key</label>
-                <input id="distPub" placeholder="GCLLM..." />
-              </div>
-            </div>
-
-            <div class="btns">
-              <button id="btnSaveKeys">Save Keys (local)</button>
-              <button class="primary" id="btnLoadAsset">Load Asset From Horizon</button>
-            </div>
-
-            <pre id="assetOut"></pre>
-            <div class="muted">لو التوكن موجود في Horizon يبقى mint تمام ✅</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>Logs</b><span>frontend</span></div>
-          <div class="bd">
-            <pre id="log"></pre>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="page" id="page-market">
-      <div class="grid2">
-        <div class="card">
-          <div class="hd"><b>Show My Offers</b><span>Horizon: /accounts/{id}/offers</span></div>
-          <div class="bd">
-            <label>Account (افتراضي: Distributor)</label>
-            <input id="offersAccount" placeholder="G..." />
-            <div class="btns">
-              <button class="primary" id="btnShowOffers">Show Offers</button>
-            </div>
-            <pre id="offersOut"></pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>Orderbook</b><span>PI ↔ DONATEWAY</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Mode</label>
-                <select id="obMode">
-                  <option value="sell_token">Selling DONATEWAY (asks)</option>
-                  <option value="buy_token">Buying DONATEWAY (bids)</option>
-                </select>
-              </div>
-              <div>
-                <label>Limit</label>
-                <input id="obLimit" value="20" />
-              </div>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnOrderbook">Load Orderbook</button>
-            </div>
-            <pre id="orderbookOut"></pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>Recent Trades</b><span>Horizon: /trades</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Limit</label>
-                <input id="trLimit" value="20" />
-              </div>
-              <div>
-                <label>Order</label>
-                <select id="trOrder">
-                  <option value="desc">Newest</option>
-                  <option value="asc">Oldest</option>
-                </select>
-              </div>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnTrades">Load Trades</button>
-            </div>
-            <pre id="tradesOut"></pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>AMM Liquidity Pool</b><span>Find pool by reserves</span></div>
-          <div class="bd">
-            <div class="btns">
-              <button class="primary" id="btnPoolInfo">Load Pool Info</button>
-            </div>
-            <pre id="poolOut"></pre>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="page" id="page-ops">
-      <div class="grid2">
-        <div class="card">
-          <div class="hd"><b>Bootstrap Token</b><span>Netlify Function</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Display Name</label>
-                <input id="displayName" value="Donate Way" />
-              </div>
-              <div>
-                <label>Initial Supply</label>
-                <input id="initialSupply" value="1000000" />
-              </div>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnBootstrap">Bootstrap (إنشاء العملة)</button>
-            </div>
-            <pre id="bootOut"></pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="hd"><b>DEX Offers</b><span>Sell / Buy via Functions</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Amount (Token)</label>
-                <input id="dexAmount" value="1" />
-              </div>
-              <div>
-                <label>Price (PI per token)</label>
-                <input id="dexPrice" value="0.000001" />
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label>OfferId (0=new)</label>
-                <input id="dexOfferId" value="0" />
-              </div>
-              <div>
-                <label>—</label>
-                <div class="btns">
-                  <button id="btnSellOffer">Sell Offer</button>
-                  <button class="primary" id="btnBuyOffer">Buy Offer</button>
+                <div class="form-group">
+                    <label>رمز العملة (Asset Code)</label>
+                    <input type="text" id="assetCode" value="DONATEWAY" placeholder="مثال: DEALWAY">
                 </div>
-              </div>
+                <div class="form-group">
+                    <label>باسورد الأدمن (Admin Password)</label>
+                    <input type="password" id="adminToken" placeholder="أدخل كلمة المرور السرية...">
+                </div>
             </div>
-            <pre id="dexOut"></pre>
-          </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>المفتاح العام للمُصدر (Issuer Pub)</label>
+                    <input type="text" id="issuerPub" placeholder="GBQ3H...">
+                </div>
+                <div class="form-group">
+                    <label>المفتاح العام للموزع (Distributor Pub)</label>
+                    <input type="text" id="distPub" placeholder="GCLLM...">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="log('تم حفظ البيانات محلياً.')">💾 حفظ محلياً</button>
+                <button class="btn btn-primary" onclick="log('جاري تحميل بيانات العملة...')">🔄 فحص العملة في Horizon</button>
+            </div>
         </div>
 
-        <div class="card" style="grid-column:1/-1">
-          <div class="hd"><b>AMM Add Liquidity</b><span>Netlify Function</span></div>
-          <div class="bd">
+        <div id="ops" class="form-section">
+            <h3 class="section-title">📌 إصدار العملة (Bootstrap)</h3>
             <div class="row">
-              <div>
-                <label>Token Amount</label>
-                <input id="ammTokenAmount" value="5000" />
-              </div>
-              <div>
-                <label>PI Amount</label>
-                <input id="ammPiAmount" value="50" />
-              </div>
+                <div class="form-group">
+                    <label>الاسم المعروض (Display Name)</label>
+                    <input type="text" id="displayName" value="Donate Way">
+                </div>
+                <div class="form-group">
+                    <label>الكمية الكلية (Initial Supply)</label>
+                    <input type="number" id="initialSupply" value="1000000">
+                </div>
+            </div>
+            <button id="btnBootstrap" class="btn btn-primary" style="width: 100%;">🚀 إصدار العملة وإرسالها للموزع</button>
+
+            <hr class="section-divider">
+
+            <h3 class="section-title">⚖️ عروض التداول (DEX)</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>الكمية (Token Amount)</label>
+                    <input type="number" id="dexAmount" value="1">
+                </div>
+                <div class="form-group">
+                    <label>السعر (Pi لكل توكين)</label>
+                    <input type="number" id="dexPrice" value="0.000001" step="0.000001">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="btnSellOffer" class="btn">📉 إنشاء عرض بيع</button>
+                <button id="btnBuyOffer" class="btn">📈 إنشاء عرض شراء</button>
+            </div>
+
+            <hr class="section-divider">
+
+            <h3 class="section-title">💧 مجمع السيولة (AMM)</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>كمية التوكين للإيداع</label>
+                    <input type="number" id="ammTokenAmount" value="5000">
+                </div>
+                <div class="form-group">
+                    <label>كمية Pi للإيداع</label>
+                    <input type="number" id="ammPiAmount" value="50">
+                </div>
             </div>
             <div class="row">
-              <div>
-                <label>Min Price (optional)</label>
-                <input id="ammMinPrice" placeholder="0.0000005" />
-              </div>
-              <div>
-                <label>Max Price (optional)</label>
-                <input id="ammMaxPrice" placeholder="0.00001" />
-              </div>
+                <div class="form-group">
+                    <label>أقل سعر (Min Price) - اختياري</label>
+                    <input type="text" id="ammMinPrice" placeholder="0.0000001">
+                </div>
+                <div class="form-group">
+                    <label>أعلى سعر (Max Price) - اختياري</label>
+                    <input type="text" id="ammMaxPrice" placeholder="10000000">
+                </div>
             </div>
-            <div class="btns">
-              <button class="primary" id="btnAddAmm">Add Liquidity</button>
-            </div>
-            <pre id="ammOut"></pre>
-          </div>
+            <button id="btnAddAmm" class="btn btn-secondary" style="width: 100%;">⚙️ إضافة السيولة للمجمع</button>
         </div>
-      </div>
+
+        <div id="market" class="form-section">
+            <h3 class="section-title">📊 أدوات استكشاف الشبكة</h3>
+            
+            <div class="form-group">
+                <label>معرف الحساب (Account ID)</label>
+                <input type="text" id="offersAccount" placeholder="أدخل المفتاح العام G...">
+            </div>
+            <button class="btn btn-primary" onclick="log('جاري جلب العروض النشطة...')">🔍 عرض صفقاتي المفتوحة</button>
+
+            <hr class="section-divider">
+
+            <div class="row">
+                <div class="form-group">
+                    <label>نوع الطلبات (Orderbook)</label>
+                    <select id="obMode">
+                        <option value="sell_token">عروض البيع (Asks)</option>
+                        <option value="buy_token">عروض الشراء (Bids)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الحد الأقصى للسجل</label>
+                    <input type="number" id="obLimit" value="20">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="log('جاري تحميل سجل الطلبات (Orderbook)...')">📋 تحميل الطلبات</button>
+                <button class="btn" onclick="log('جاري تحميل سجل الصفقات (Trades)...')">📜 تحميل الصفقات السابقة</button>
+            </div>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="log('جاري فحص مجمع السيولة...')">💧 استعلام عن حالة السيولة (Pool Info)</button>
+        </div>
+
+        <div id="domain" class="form-section">
+            <h3 class="section-title">🌐 مولد ملف pi.toml</h3>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label>نطاق الموقع (Domain)</label>
+                    <input type="text" id="verDomain" value="testapp2026.netlify.app">
+                </div>
+                <div class="form-group">
+                    <label>المفتاح العام للمُصدر</label>
+                    <input type="text" id="verIssuer" placeholder="GBQ3...">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>رمز العملة (Asset Code)</label>
+                    <input type="text" id="verAssetCode" value="DONATEWAY">
+                </div>
+                <div class="form-group">
+                    <label>رابط اللوجو (Image URL)</label>
+                    <input type="text" id="verImage" value="https://testapp2026.netlify.app/token_512.png">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>اسم المنظمة (Org Name)</label>
+                    <input type="text" id="verOrgName" value="Donate Way">
+                </div>
+                <div class="form-group">
+                    <label>رابط المنظمة (Org URL)</label>
+                    <input type="text" id="verOrgUrl" value="https://testapp2026.netlify.app">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>الوصف (Description)</label>
+                <input type="text" id="verDesc" value="Donate Way token on Pi Testnet for donations.">
+            </div>
+
+            <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد الكود</button>
+            
+            <div class="form-group">
+                <label>الكود الناتج (انسخه في ملف .well-known/pi.toml)</label>
+                <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace;"></textarea>
+            </div>
+        </div>
+
+        <div id="logBox" class="log-box">Log Console Ready...</div>
     </div>
 
-    <div class="page" id="page-domain">
-      <div class="grid2">
-        <div class="card">
-          <div class="hd"><b>Generate pi.toml</b><span>with DOCUMENTATION + image</span></div>
-          <div class="bd">
-            <div class="row">
-              <div>
-                <label>Domain</label>
-                <input id="verDomain" value="testapp2026.netlify.app" />
-              </div>
-              <div>
-                <label>Issuer Public Key</label>
-                <input id="verIssuer" placeholder="GBQ3..." />
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label>Asset Code</label>
-                <input id="verAssetCode" value="DONATEWAY" />
-              </div>
-              <div>
-                <label>Image URL</label>
-                <input id="verImage" value="https://testapp2026.netlify.app/token_512.png" />
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label>Org Name</label>
-                <input id="verOrgName" value="Donate Way" />
-              </div>
-              <div>
-                <label>Org URL</label>
-                <input id="verOrgUrl" value="https://testapp2026.netlify.app" />
-              </div>
-            </div>
-            <label>Description</label>
-            <input id="verDesc" value="Donate Way token on Pi Testnet for donations." />
+    <script>
+        // 🔴 الدومين الأساسي للباك إند (Netlify)
+        const BACKEND_URL = "https://testapp2026.netlify.app";
 
-            <div class="btns">
-              <button class="primary" id="btnGenPiToml">Generate</button>
-            </div>
+        // دالة تبديل التابات
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
 
-            <label>Generated pi.toml</label>
-            <textarea id="tomlOut"></textarea>
+        // دالة السجل (طابعة المخرجات في الشاشة السوداء)
+        function log(...args) {
+            const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
+            const el = document.getElementById("logBox");
+            if (el) {
+                const time = new Date().toLocaleTimeString();
+                el.textContent = `[${time}] ${line}\n` + el.textContent;
+            }
+        }
 
-          </div>
-        </div>
-      </div>
-    </div>
+        function normalizeAssetCode(code) {
+            return (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+        }
 
-    <footer class="muted" style="text-align:center;padding:8px">
-      Admin Dashboard — Testnet Only
-    </footer>
+        // دالة الاتصال بالباك إند
+        async function apiPost(path, body, adminToken) {
+            const fullUrl = BACKEND_URL + path;
+            const res = await fetch(fullUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(adminToken ? { "X-Admin-Token": adminToken } : {}),
+                },
+                body: JSON.stringify(body || {}),
+            });
+            
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch { data = { raw: text }; }
+            
+            if (!res.ok) {
+                throw new Error(data?.error || data?.message || `HTTP ${res.status}: ${text}`);
+            }
+            return data;
+        }
 
-    <script src="./app.js"></script>
-  </div>
+        // 1. إنشاء العملة (Bootstrap)
+        const btnBootstrap = document.getElementById("btnBootstrap");
+        if (btnBootstrap) {
+            btnBootstrap.addEventListener("click", async () => {
+                const displayName = document.getElementById("displayName").value.trim();
+                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+                document.getElementById("assetCode").value = assetCode;
+                
+                const initialSupply = document.getElementById("initialSupply").value.trim();
+                const adminToken = document.getElementById("adminToken").value.trim();
+                
+                if (!adminToken) return log("❌ خطأ: يرجى إدخال باسورد الأدمن في تبويبة لوحة القيادة أولاً.");
+                if (!assetCode) return log("❌ خطأ: Asset Code مفقود.");
+                
+                try {
+                    log(`⏳ جاري إنشاء العملة (${assetCode})...`);
+                    const data = await apiPost("/.netlify/functions/token_bootstrap", {
+                        displayName, assetCode, initialSupply,
+                    }, adminToken);
+                    log("✅ تمت عملية إنشاء العملة بنجاح:", data);
+                } catch (e) {
+                    log("❌ فشل إنشاء العملة:", e.message || e);
+                }
+            });
+        }
+
+        // 2. إنشاء عرض بيع (DEX)
+        const btnSellOffer = document.getElementById("btnSellOffer");
+        if (btnSellOffer) {
+            btnSellOffer.addEventListener("click", async () => {
+                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+                const amount = document.getElementById("dexAmount").value.trim();
+                const price = document.getElementById("dexPrice").value.trim();
+                const adminToken = document.getElementById("adminToken").value.trim();
+                
+                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+                
+                try {
+                    log(`⏳ جاري إنشاء عرض بيع (${amount} توكين بسعر ${price})...`);
+                    const data = await apiPost("/.netlify/functions/dex_sell_offer", {
+                        assetCode, amount, price,
+                    }, adminToken);
+                    log("✅ تم إنشاء العرض بنجاح:", data);
+                } catch (e) {
+                    log("❌ فشل إنشاء العرض:", e.message || e);
+                }
+            });
+        }
+
+        // 3. إضافة السيولة (AMM)
+        const btnAddAmm = document.getElementById("btnAddAmm");
+        if (btnAddAmm) {
+            btnAddAmm.addEventListener("click", async () => {
+                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+                const tokenAmount = document.getElementById("ammTokenAmount").value.trim();
+                const piAmount = document.getElementById("ammPiAmount").value.trim();
+                const minPrice = document.getElementById("ammMinPrice").value.trim();
+                const maxPrice = document.getElementById("ammMaxPrice").value.trim();
+                const adminToken = document.getElementById("adminToken").value.trim();
+
+                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+
+                try {
+                    log(`⏳ جاري إرسال السيولة للمجمع (${tokenAmount} توكين + ${piAmount} Pi)...`);
+                    const data = await apiPost("/.netlify/functions/amm_add_liquidity", {
+                        assetCode, tokenAmount, piAmount, minPrice, maxPrice
+                    }, adminToken);
+                    log("✅ تمت إضافة السيولة بنجاح:", data);
+                } catch (e) {
+                    log("❌ فشل إضافة السيولة:", e.message || e);
+                }
+            });
+        }
+
+        // 4. توليد ملف pi.toml
+        const btnGenPiToml = document.getElementById("btnGenPiToml");
+        if (btnGenPiToml) {
+            btnGenPiToml.addEventListener("click", () => {
+                const domain = document.getElementById("verDomain").value.trim();
+                const issuer = document.getElementById("verIssuer").value.trim();
+                const assetCode = document.getElementById("verAssetCode").value.trim();
+                const image = document.getElementById("verImage").value.trim();
+                const orgName = document.getElementById("verOrgName").value.trim();
+                const orgUrl = document.getElementById("verOrgUrl").value.trim();
+                const desc = document.getElementById("verDesc").value.trim();
+
+                if (!issuer || !assetCode) {
+                    return log("❌ خطأ: يجب كتابة الـ Issuer Public Key والـ Asset Code");
+                }
+
+                const tomlString = `
+# Network Info
+NETWORK_PASSPHRASE="Pi Testnet"
+HORIZON_URL="https://api.testnet.minepi.com"
+
+# Organization Info
+ORG_NAME="${orgName}"
+ORG_URL="${orgUrl}"
+ORG_DESCRIPTION="${desc}"
+ORG_LOGO="${image}"
+
+# Token Info
+[[CURRENCIES]]
+code="${assetCode}"
+issuer="${issuer}"
+display_decimals=7
+name="${orgName} Token"
+desc="${desc}"
+image="${image}"
+`.trim();
+
+                document.getElementById("tomlOut").value = tomlString;
+                log("✅ تم توليد محتوى ملف pi.toml بنجاح (راجع التبويبة).");
+            });
+        }
+
+        log("✅ Dashboard Initialized. Admin Mode Active.");
+    </script>
 </body>
 </html>
