@@ -1,4 +1,4 @@
-/* Donate Way Dashboard (Testnet) */
+/* Donate Way Dashboard */
 
 const $ = (id) => document.getElementById(id);
 
@@ -9,15 +9,17 @@ const state = {
 function log(...args) {
   const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
   const el = $("log");
-  el.textContent = `${new Date().toLocaleTimeString()}  ${line}\n` + el.textContent;
+  if (el) {
+    el.textContent = `${new Date().toLocaleTimeString()}  ${line}\n` + el.textContent;
+  }
 }
 
 function setStatus() {
   const Pi = window.Pi;
-  $("sdkConnected").textContent = Pi ? "Loaded" : "Not loaded";
-  $("sdkUser").textContent = state.auth?.user?.username || "—";
-  $("sdkUid").textContent = state.auth?.user?.uid || "—";
-  $("sdkToken").textContent = state.auth?.accessToken ? state.auth.accessToken.slice(0, 24) + "..." : "—";
+  if ($("sdkConnected")) $("sdkConnected").textContent = Pi ? "Loaded" : "Not loaded";
+  if ($("sdkUser")) $("sdkUser").textContent = state.auth?.user?.username || "—";
+  if ($("sdkUid")) $("sdkUid").textContent = state.auth?.user?.uid || "—";
+  if ($("sdkToken")) $("sdkToken").textContent = state.auth?.accessToken ? state.auth.accessToken.slice(0, 24) + "..." : "—";
 }
 
 function normalizeAssetCode(code) {
@@ -51,7 +53,7 @@ async function apiPost(path, body, adminToken) {
 $("btnInit").addEventListener("click", () => {
   const Pi = window.Pi;
   if (!Pi) return log("❌ Pi SDK مش محمّل.");
-  // Pi.init({ version: "2.0" }) (وثائق SDK) 4
+  
   Pi.init({ version: "2.0", sandbox: false });
   log("✅ Pi.init done (version 2.0, sandbox=false)");
   setStatus();
@@ -62,7 +64,7 @@ $("btnAuth").addEventListener("click", async () => {
   const Pi = window.Pi;
   if (!Pi) return log("❌ Pi SDK مش محمّل.");
   
-  const scopes = ["username", "payments"]; // payments مطلوب لـ createPayment 5
+  const scopes = ["username", "payments"];
   
   function onIncompletePaymentFound(payment) {
     log("⚠️ Incomplete payment found:", payment);
@@ -110,8 +112,9 @@ $("btnSellOffer").addEventListener("click", async () => {
   const assetCode = normalizeAssetCode($("assetCode").value);
   $("assetCode").value = assetCode;
   
-  const amount = $("offerAmount").value.trim();
-  const price = $("offerPrice").value.trim();
+  // تم تعديل الـ IDs هنا عشان تطابق الـ HTML
+  const amount = $("dexAmount").value.trim();
+  const price = $("dexPrice").value.trim();
   const adminToken = $("adminToken").value.trim();
   
   if (!assetCode) return log("❌ Asset Code فاضي.");
@@ -144,21 +147,29 @@ $("btnDonate").addEventListener("click", async () => {
   try {
     log("⏳ Creating payment...", { amount, memo });
     
-    // createPayment + callbacks حسب docs 6
     Pi.createPayment({
       amount,
       memo,
       metadata: { kind: "donation", app: "DonateWay" }
     }, {
+      // تم إضافة try...catch لتفادي وقوف الكود لو الباك إند رجع error
       onReadyForServerApproval: async (paymentId) => {
-        log("➡️ onReadyForServerApproval:", paymentId);
-        await apiPost("/.netlify/functions/pi_approve", { paymentId });
-        log("✅ Approved:", paymentId);
+        try {
+          log("➡️ onReadyForServerApproval:", paymentId);
+          await apiPost("/.netlify/functions/pi_approve", { paymentId });
+          log("✅ Approved:", paymentId);
+        } catch (err) {
+          log("❌ Server Approval Error:", err.message || err);
+        }
       },
       onReadyForServerCompletion: async (paymentId, txid) => {
-        log("➡️ onReadyForServerCompletion:", { paymentId, txid });
-        await apiPost("/.netlify/functions/pi_complete", { paymentId, txid });
-        log("✅ Completed:", { paymentId, txid });
+        try {
+          log("➡️ onReadyForServerCompletion:", { paymentId, txid });
+          await apiPost("/.netlify/functions/pi_complete", { paymentId, txid });
+          log("✅ Completed:", { paymentId, txid });
+        } catch (err) {
+          log("❌ Server Completion Error:", err.message || err);
+        }
       },
       onCancel: (paymentId) => log("⚠️ Payment cancelled:", paymentId),
       onError: (err, payment) => log("❌ Payment error:", err?.message || err, payment || "")
