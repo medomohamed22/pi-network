@@ -35,48 +35,44 @@ exports.handler = async (event) => {
     const token = new StellarSdk.Asset(assetCode, issuerKP.publicKey());
     const pi = StellarSdk.Asset.native();
     
-    if (!StellarSdk.LiquidityPoolAsset || !StellarSdk.Operation.liquidityPoolDeposit) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: "AMM not supported by stellar-sdk version on this build",
-          hint: "Try updating stellar-sdk to a version that supports LiquidityPoolAsset + liquidityPoolDeposit"
-        })
-      };
-    }
-    
     const fee = StellarSdk.LiquidityPoolFeeV18 || 30;
     
-    // الحل الأكيد: عملة Pi دايماً هي Asset A لأن نوعها Native
+    // Pi is Native, so it's ALWAYS Asset A
     const assetA = pi;
     const assetB = token;
     
-    // بالتالي الكميات لازم تترتب بناءً على العملات
     const maxAmountA = String(piAmount);
     const maxAmountB = String(tokenAmount);
 
+    // 1. تجهيز الكائن الخاص بمجمع السيولة لعمل خط الثقة (Trustline)
     const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, fee);
-    const poolId = poolAsset.getLiquidityPoolId();
-    const poolShare = new StellarSdk.LiquidityPoolShareAsset(poolId);
+    
+    // 2. استخراج الـ Pool ID بالطريقة الصحيحة المدعومة في stellar-sdk v12
+    const poolIdBuffer = StellarSdk.getLiquidityPoolId("constant_product", assetA, assetB, fee);
+    const poolId = poolIdBuffer.toString("hex");
     
     const account = await server.loadAccount(distKP.publicKey());
     const baseFee = await server.fetchBaseFee();
     
-    const hasPoolShare = account.balances?.some(b => b.asset_type === "liquidity_pool_shares" && b.liquidity_pool_id === poolId);
+    // فحص إذا كان الحساب يمتلك بالفعل خط ثقة مع مجمع السيولة هذا
+    const hasPoolShare = account.balances?.some(
+      b => b.asset_type === "liquidity_pool_shares" && b.liquidity_pool_id === poolId
+    );
     
     const txb = new StellarSdk.TransactionBuilder(account, {
       fee: baseFee,
       networkPassphrase: NETWORK_PASSPHRASE,
     });
     
+    // إذا لم يكن هناك خط ثقة (Trustline) للـ Pool، قم بإضافته باستخدام poolAsset
     if (!hasPoolShare) {
-      txb.addOperation(StellarSdk.Operation.changeTrust({ asset: poolShare }));
+      txb.addOperation(StellarSdk.Operation.changeTrust({ asset: poolAsset }));
     }
     
-    // ضبط حماية الأسعار الافتراضية بنطاق واسع لتجنب رفض المعاملة
     const minP = (minPrice && String(minPrice)) || "0.0000001";
     const maxP = (maxPrice && String(maxPrice)) || "10000000";
     
+    // عملية الإيداع (Deposit)
     txb.addOperation(StellarSdk.Operation.liquidityPoolDeposit({
       liquidityPoolId: poolId,
       maxAmountA: maxAmountA,
@@ -100,7 +96,6 @@ exports.handler = async (event) => {
     };
   } catch (e) {
     console.error("AMM Deposit Error:", e);
-    // جلب التفاصيل من السيرفر لو موجودة عشان تساعد في فهم أي مشكلة تانية
     const errorDetails = e.response && e.response.data ? e.response.data : e.message || String(e);
     return { statusCode: 500, body: JSON.stringify({ error: errorDetails }) };
   }
