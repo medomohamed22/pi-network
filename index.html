@@ -156,7 +156,7 @@
 
             <div class="btn-group">
                 <button class="btn" onclick="log('تم حفظ البيانات محلياً.')">💾 حفظ محلياً</button>
-                <button class="btn btn-primary" onclick="log('جاري تحميل بيانات العملة...')">🔄 فحص العملة في Horizon</button>
+                <button id="btnCheckAsset" class="btn btn-primary">🔄 فحص العملة في Horizon</button>
             </div>
         </div>
 
@@ -225,7 +225,7 @@
                 <label>معرف الحساب (Account ID)</label>
                 <input type="text" id="offersAccount" placeholder="أدخل المفتاح العام G...">
             </div>
-            <button class="btn btn-primary" onclick="log('جاري جلب العروض النشطة...')">🔍 عرض صفقاتي المفتوحة</button>
+            <button id="btnGetOffers" class="btn btn-primary">🔍 عرض صفقاتي المفتوحة</button>
 
             <hr class="section-divider">
 
@@ -243,10 +243,10 @@
                 </div>
             </div>
             <div class="btn-group">
-                <button class="btn" onclick="log('جاري تحميل سجل الطلبات (Orderbook)...')">📋 تحميل الطلبات</button>
-                <button class="btn" onclick="log('جاري تحميل سجل الصفقات (Trades)...')">📜 تحميل الصفقات السابقة</button>
+                <button id="btnGetOrderbook" class="btn">📋 تحميل الطلبات</button>
+                <button id="btnGetTrades" class="btn">📜 تحميل الصفقات السابقة</button>
             </div>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="log('جاري فحص مجمع السيولة...')">💧 استعلام عن حالة السيولة (Pool Info)</button>
+            <button id="btnGetPoolInfo" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">💧 استعلام عن حالة السيولة (Pool Info)</button>
         </div>
 
         <div id="domain" class="form-section">
@@ -324,6 +324,7 @@
     <script>
         // 🔴 الدومين الأساسي للباك إند (Netlify)
         const BACKEND_URL = "https://testapp2026.netlify.app";
+        const HORIZON_API = "https://api.testnet.minepi.com";
 
         // دالة تبديل التابات
         function switchTab(tabId, btn) {
@@ -370,96 +371,92 @@
         }
 
         // 1. إنشاء العملة (Bootstrap)
-        const btnBootstrap = document.getElementById("btnBootstrap");
-        if (btnBootstrap) {
-            btnBootstrap.addEventListener("click", async () => {
-                const displayName = document.getElementById("displayName").value.trim();
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                document.getElementById("assetCode").value = assetCode;
-                
-                const initialSupply = document.getElementById("initialSupply").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                
-                if (!adminToken) return log("❌ خطأ: يرجى إدخال باسورد الأدمن في تبويبة لوحة القيادة أولاً.");
-                if (!assetCode) return log("❌ خطأ: Asset Code مفقود.");
-                
-                try {
-                    log(`⏳ جاري إنشاء العملة (${assetCode})...`);
-                    const data = await apiPost("/.netlify/functions/token_bootstrap", {
-                        displayName, assetCode, initialSupply,
-                    }, adminToken);
-                    log("✅ تمت عملية إنشاء العملة بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إنشاء العملة:", e.message || e);
-                }
-            });
-        }
+        document.getElementById("btnBootstrap")?.addEventListener("click", async () => {
+            const displayName = document.getElementById("displayName").value.trim();
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            document.getElementById("assetCode").value = assetCode;
+            
+            const initialSupply = document.getElementById("initialSupply").value.trim();
+            const adminToken = document.getElementById("adminToken").value.trim();
+            
+            if (!adminToken) return log("❌ خطأ: يرجى إدخال باسورد الأدمن في تبويبة لوحة القيادة أولاً.");
+            if (!assetCode) return log("❌ خطأ: Asset Code مفقود.");
+            
+            try {
+                log(`⏳ جاري إنشاء العملة (${assetCode})...`);
+                const data = await apiPost("/.netlify/functions/token_bootstrap", { displayName, assetCode, initialSupply }, adminToken);
+                log("✅ تمت عملية إنشاء العملة بنجاح:", data);
+            } catch (e) {
+                log("❌ فشل إنشاء العملة:", e.message || e);
+            }
+        });
 
         // 2. إنشاء عرض بيع (DEX)
-        const btnSellOffer = document.getElementById("btnSellOffer");
-        if (btnSellOffer) {
-            btnSellOffer.addEventListener("click", async () => {
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                const amount = document.getElementById("dexAmount").value.trim();
-                const price = document.getElementById("dexPrice").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
-                
-                try {
-                    log(`⏳ جاري إنشاء عرض بيع (${amount} توكين بسعر ${price})...`);
-                    const data = await apiPost("/.netlify/functions/dex_sell_offer", {
-                        assetCode, amount, price,
-                    }, adminToken);
-                    log("✅ تم إنشاء العرض بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إنشاء العرض:", e.message || e);
-                }
-            });
-        }
+        document.getElementById("btnSellOffer")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const amount = document.getElementById("dexAmount").value.trim();
+            const price = document.getElementById("dexPrice").value.trim();
+            const adminToken = document.getElementById("adminToken").value.trim();
+            if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+            
+            try {
+                log(`⏳ جاري إنشاء عرض بيع (${amount} توكين بسعر ${price})...`);
+                const data = await apiPost("/.netlify/functions/dex_sell_offer", { assetCode, amount, price }, adminToken);
+                log("✅ تم إنشاء العرض بنجاح:", data);
+            } catch (e) {
+                log("❌ فشل إنشاء العرض:", e.message || e);
+            }
+        });
+
+        // تم إضافة برمجة زر "إنشاء عرض شراء" الذي كان مفقوداً
+        document.getElementById("btnBuyOffer")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const amount = document.getElementById("dexAmount").value.trim();
+            const price = document.getElementById("dexPrice").value.trim();
+            const adminToken = document.getElementById("adminToken").value.trim();
+            if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+            
+            try {
+                log(`⏳ جاري إنشاء عرض شراء (${amount} توكين بسعر ${price})...`);
+                const data = await apiPost("/.netlify/functions/dex_buy_offer", { assetCode, amount, price }, adminToken);
+                log("✅ تم إنشاء العرض بنجاح:", data);
+            } catch (e) {
+                log("❌ فشل إنشاء العرض:", e.message || e);
+            }
+        });
 
         // 3. إضافة السيولة (AMM)
-        const btnAddAmm = document.getElementById("btnAddAmm");
-        if (btnAddAmm) {
-            btnAddAmm.addEventListener("click", async () => {
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                const tokenAmount = document.getElementById("ammTokenAmount").value.trim();
-                const piAmount = document.getElementById("ammPiAmount").value.trim();
-                const minPrice = document.getElementById("ammMinPrice").value.trim();
-                const maxPrice = document.getElementById("ammMaxPrice").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
+        document.getElementById("btnAddAmm")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const tokenAmount = document.getElementById("ammTokenAmount").value.trim();
+            const piAmount = document.getElementById("ammPiAmount").value.trim();
+            const minPrice = document.getElementById("ammMinPrice").value.trim();
+            const maxPrice = document.getElementById("ammMaxPrice").value.trim();
+            const adminToken = document.getElementById("adminToken").value.trim();
 
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+            if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
 
-                try {
-                    log(`⏳ جاري إرسال السيولة للمجمع (${tokenAmount} توكين + ${piAmount} Pi)...`);
-                    const data = await apiPost("/.netlify/functions/amm_add_liquidity", {
-                        assetCode, tokenAmount, piAmount, minPrice, maxPrice
-                    }, adminToken);
-                    log("✅ تمت إضافة السيولة بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إضافة السيولة:", e.message || e);
-                }
-            });
-        }
+            try {
+                log(`⏳ جاري إرسال السيولة للمجمع (${tokenAmount} توكين + ${piAmount} Pi)...`);
+                const data = await apiPost("/.netlify/functions/amm_add_liquidity", { assetCode, tokenAmount, piAmount, minPrice, maxPrice }, adminToken);
+                log("✅ تمت إضافة السيولة بنجاح:", data);
+            } catch (e) {
+                log("❌ فشل إضافة السيولة:", e.message || e);
+            }
+        });
 
         // 4. توليد ملف pi.toml
-        const btnGenPiToml = document.getElementById("btnGenPiToml");
-        if (btnGenPiToml) {
-            btnGenPiToml.addEventListener("click", () => {
-                const domain = document.getElementById("verDomain").value.trim();
-                const issuer = document.getElementById("verIssuer").value.trim();
-                const assetCode = document.getElementById("verAssetCode").value.trim();
-                const image = document.getElementById("verImage").value.trim();
-                const orgName = document.getElementById("verOrgName").value.trim();
-                const orgUrl = document.getElementById("verOrgUrl").value.trim();
-                const desc = document.getElementById("verDesc").value.trim();
+        document.getElementById("btnGenPiToml")?.addEventListener("click", () => {
+            const issuer = document.getElementById("verIssuer").value.trim() || document.getElementById("issuerPub").value.trim();
+            const assetCode = document.getElementById("verAssetCode").value.trim();
+            const image = document.getElementById("verImage").value.trim();
+            const orgName = document.getElementById("verOrgName").value.trim();
+            const orgUrl = document.getElementById("verOrgUrl").value.trim();
+            const desc = document.getElementById("verDesc").value.trim();
 
-                if (!issuer || !assetCode) {
-                    return log("❌ خطأ: يجب كتابة الـ Issuer Public Key والـ Asset Code");
-                }
+            if (!issuer || !assetCode) return log("❌ خطأ: يجب كتابة الـ Issuer Public Key والـ Asset Code");
 
-                const tomlString = `
+            const tomlString = `
 # Network Info
 NETWORK_PASSPHRASE="Pi Testnet"
 HORIZON_URL="https://api.testnet.minepi.com"
@@ -480,73 +477,130 @@ desc="${desc}"
 image="${image}"
 `.trim();
 
-                document.getElementById("tomlOut").value = tomlString;
-                log("✅ تم توليد محتوى ملف pi.toml بنجاح (راجع التبويبة).");
-            });
-        }
+            document.getElementById("tomlOut").value = tomlString;
+            log("✅ تم توليد محتوى ملف pi.toml بنجاح (راجع التبويبة).");
+        });
 
         // 5. ربط الدومين (Set Home Domain)
-        const btnSetHomeDomain = document.getElementById("btnSetHomeDomain");
-        if (btnSetHomeDomain) {
-            btnSetHomeDomain.addEventListener("click", async () => {
-                const domain = document.getElementById("hdDomain").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+        document.getElementById("btnSetHomeDomain")?.addEventListener("click", async () => {
+            const domain = document.getElementById("hdDomain").value.trim();
+            const adminToken = document.getElementById("adminToken").value.trim();
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
 
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب (يُرجى إدخاله في لوحة القيادة).");
-                if (!domain) return log("❌ خطأ: يرجى كتابة الدومين المراد ربطه.");
+            if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
+            if (!domain) return log("❌ خطأ: يرجى كتابة الدومين المراد ربطه.");
 
-                try {
-                    log(`⏳ جاري ربط الدومين (${domain}) بحساب المُصدر...`);
-                    document.getElementById("homeDomainOut").value = "جاري الاتصال بالخادم...";
-                    
-                    // تأكد إنك تمتلك دالة backend جاهزة في مسار set_domain
-                    const data = await apiPost("/.netlify/functions/set_domain", {
-                        domain: domain,
-                        assetCode: assetCode
-                    }, adminToken);
-                    
-                    log("✅ تم ربط الدومين بنجاح:", data);
-                    document.getElementById("homeDomainOut").value = "تم الربط بنجاح:\n" + JSON.stringify(data, null, 2);
-                } catch (e) {
-                    log("❌ فشل ربط الدومين:", e.message || e);
-                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
-                }
-            });
-        }
+            try {
+                log(`⏳ جاري ربط الدومين (${domain}) بحساب المُصدر...`);
+                document.getElementById("homeDomainOut").value = "جاري الاتصال بالخادم...";
+                const data = await apiPost("/.netlify/functions/set_domain", { domain, assetCode }, adminToken);
+                log("✅ تم ربط الدومين بنجاح:", data);
+                document.getElementById("homeDomainOut").value = "تم الربط بنجاح:\n" + JSON.stringify(data, null, 2);
+            } catch (e) {
+                log("❌ فشل ربط الدومين:", e.message || e);
+                document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
+            }
+        });
 
         // 6. فحص الدومين المربوط (Check Issuer Info)
-        const btnGetIssuerInfo = document.getElementById("btnGetIssuerInfo");
-        if (btnGetIssuerInfo) {
-            btnGetIssuerInfo.addEventListener("click", async () => {
-                const issuerPub = document.getElementById("verIssuer").value.trim() || document.getElementById("issuerPub").value.trim();
-                
-                if (!issuerPub) {
-                    return log("❌ خطأ: يرجى كتابة المفتاح العام للمُصدر في خانة (Issuer Public Key) أولاً.");
-                }
+        document.getElementById("btnGetIssuerInfo")?.addEventListener("click", async () => {
+            const issuerPub = document.getElementById("verIssuer").value.trim() || document.getElementById("issuerPub").value.trim();
+            if (!issuerPub) return log("❌ خطأ: يرجى كتابة المفتاح العام للمُصدر في خانة (Issuer Public Key) أولاً.");
 
-                try {
-                    log(`⏳ جاري جلب بيانات حساب المُصدر من شبكة Pi...`);
-                    document.getElementById("homeDomainOut").value = "جاري الاتصال بـ Horizon API...";
-                    
-                    const res = await fetch(`https://api.testnet.minepi.com/accounts/${issuerPub}`);
-                    if (!res.ok) throw new Error("الحساب غير موجود أو لم يتم تفعيله بعد.");
-                    
-                    const data = await res.json();
-                    
-                    if (data.home_domain) {
-                        log(`✅ الدومين المربوط حالياً بهذا الحساب هو: ${data.home_domain}`);
-                        document.getElementById("homeDomainOut").value = `الدومين المربوط حالياً:\n${data.home_domain}\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
-                    } else {
-                        log(`⚠️ لا يوجد أي دومين (home_domain) مربوط بهذا الحساب حتى الآن.`);
-                        document.getElementById("homeDomainOut").value = `لا يوجد دومين مربوط.\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
-                    }
-                } catch (e) {
-                    log("❌ فشل فحص الحساب:", e.message || e);
-                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
+            try {
+                log(`⏳ جاري جلب بيانات حساب المُصدر من شبكة Pi...`);
+                document.getElementById("homeDomainOut").value = "جاري الاتصال بـ Horizon API...";
+                const res = await fetch(`${HORIZON_API}/accounts/${issuerPub}`);
+                if (!res.ok) throw new Error("الحساب غير موجود أو لم يتم تفعيله بعد.");
+                const data = await res.json();
+                
+                if (data.home_domain) {
+                    log(`✅ الدومين المربوط حالياً: ${data.home_domain}`);
+                    document.getElementById("homeDomainOut").value = `الدومين المربوط حالياً:\n${data.home_domain}\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    log(`⚠️ لا يوجد أي دومين (home_domain) مربوط بهذا الحساب.`);
+                    document.getElementById("homeDomainOut").value = `لا يوجد دومين مربوط.\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
                 }
-            });
-        }
+            } catch (e) {
+                log("❌ فشل فحص الحساب:", e.message || e);
+                document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
+            }
+        });
+
+        // ----------- إضافة وظائف مستكشف السوق (التي كانت وهمية) -----------
+
+        // جلب الصفقات المفتوحة (Offers)
+        document.getElementById("btnGetOffers")?.addEventListener("click", async () => {
+            const accId = document.getElementById("offersAccount").value.trim() || document.getElementById("issuerPub").value.trim();
+            if (!accId) return log("❌ خطأ: يجب إدخال معرف الحساب للبحث عن العروض.");
+            try {
+                log(`⏳ جاري جلب العروض النشطة للحساب...`);
+                const res = await fetch(`${HORIZON_API}/accounts/${accId}/offers`);
+                const data = await res.json();
+                if(data.status && data.status !== 200) throw new Error(data.detail);
+                log("✅ العروض النشطة:\n" + JSON.stringify(data._embedded?.records || [], null, 2));
+            } catch (e) { log("❌ فشل جلب العروض:", e.message || e); }
+        });
+
+        // جلب سجل الطلبات (Orderbook)
+        document.getElementById("btnGetOrderbook")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const issuerPub = document.getElementById("issuerPub").value.trim();
+            const limit = document.getElementById("obLimit").value || 20;
+            
+            if (!assetCode || !issuerPub) return log("❌ خطأ: يجب تحديد رمز العملة و(Issuer Pub) في لوحة القيادة أولاً.");
+            
+            try {
+                log(`⏳ جاري تحميل سجل الطلبات (${assetCode})...`);
+                const url = `${HORIZON_API}/order_book?selling_asset_type=credit_alphanum12&selling_asset_code=${assetCode}&selling_asset_issuer=${issuerPub}&buying_asset_type=native&limit=${limit}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                log("✅ سجل الطلبات (Orderbook):\n" + JSON.stringify(data, null, 2));
+            } catch (e) { log("❌ فشل جلب سجل الطلبات:", e.message || e); }
+        });
+
+        // جلب الصفقات السابقة (Trades)
+        document.getElementById("btnGetTrades")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const issuerPub = document.getElementById("issuerPub").value.trim();
+            if (!assetCode || !issuerPub) return log("❌ خطأ: يجب تحديد رمز العملة و(Issuer Pub) أولاً.");
+            
+            try {
+                log(`⏳ جاري تحميل الصفقات السابقة...`);
+                const url = `${HORIZON_API}/trades?base_asset_type=credit_alphanum12&base_asset_code=${assetCode}&base_asset_issuer=${issuerPub}&counter_asset_type=native`;
+                const res = await fetch(url);
+                const data = await res.json();
+                log("✅ الصفقات السابقة:\n" + JSON.stringify(data._embedded?.records || [], null, 2));
+            } catch (e) { log("❌ فشل جلب الصفقات:", e.message || e); }
+        });
+
+        // جلب حالة مجمع السيولة (Liquidity Pools)
+        document.getElementById("btnGetPoolInfo")?.addEventListener("click", async () => {
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            const issuerPub = document.getElementById("issuerPub").value.trim();
+            if (!assetCode || !issuerPub) return log("❌ خطأ: يرجى تحديد رمز العملة والمُصدر أولاً.");
+            
+            try {
+                log(`⏳ جاري فحص مجمعات السيولة (Reserves)...`);
+                const url = `${HORIZON_API}/liquidity_pools?reserves=native,${assetCode}:${issuerPub}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                log("✅ بيانات مجمع السيولة:\n" + JSON.stringify(data._embedded?.records || [], null, 2));
+            } catch (e) { log("❌ فشل فحص مجمع السيولة:", e.message || e); }
+        });
+
+        // فحص العملة الأساسي
+        document.getElementById("btnCheckAsset")?.addEventListener("click", async () => {
+            const issuerPub = document.getElementById("issuerPub").value.trim();
+            const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+            if (!issuerPub || !assetCode) return log("❌ يجب تحديد المفتاح العام للمُصدر ورمز العملة.");
+            try {
+                log(`⏳ جاري فحص حالة العملة...`);
+                const res = await fetch(`${HORIZON_API}/assets?asset_code=${assetCode}&asset_issuer=${issuerPub}`);
+                const data = await res.json();
+                log("✅ تفاصيل العملة:\n" + JSON.stringify(data._embedded?.records || "غير موجودة بعد.", null, 2));
+            } catch (e) { log("❌ فشل الفحص:", e.message); }
+        });
 
         log("✅ Dashboard Initialized. Admin Mode Active.");
     </script>
