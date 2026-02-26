@@ -17,22 +17,26 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "يجب إرسال عنوان المحفظة والكمية." }) };
     }
 
-    // جلب المفاتيح من إعدادات Netlify
-    const DISTRIBUTOR_SECRET = process.env.DISTRIBUTOR_SECRET; // المفتاح السري للموزع (الذي يمتلك العملات)
-    const ISSUER_PUBLIC = process.env.ISSUER_PUBLIC;       // المفتاح العام للمُصدر (G...)
-    const ASSET_CODE = "DONATE";                           // رمز العملة بالضبط كما هو مسجل
+    // جلب المفاتيح من إعدادات Netlify المتاحة لديك
+    const DISTRIBUTOR_SECRET = process.env.DISTRIBUTOR_SECRET; 
+    const ISSUER_SECRET = process.env.ISSUER_SECRET; 
+    const ASSET_CODE = "DONATE";                           
     
-    if (!DISTRIBUTOR_SECRET || !ISSUER_PUBLIC) {
-      return { statusCode: 500, body: JSON.stringify({ error: "المفاتيح غير متوفرة في إعدادات البيئة (Env Vars)." }) };
+    if (!DISTRIBUTOR_SECRET || !ISSUER_SECRET) {
+      return { statusCode: 500, body: JSON.stringify({ error: "المفاتيح (ISSUER_SECRET أو DISTRIBUTOR_SECRET) غير متوفرة في Netlify." }) };
     }
     
     const server = new StellarSdk.Horizon.Server(HORIZON);
     
     // استخراج بيانات حساب الموزع (المرسل)
     const distKP = StellarSdk.Keypair.fromSecret(DISTRIBUTOR_SECRET);
+
+    // استخراج المفتاح العام للمُصدر تلقائياً من المفتاح السري
+    const issuerKP = StellarSdk.Keypair.fromSecret(ISSUER_SECRET);
+    const issuerPublicKey = issuerKP.publicKey();
     
-    // تعريف العملة المراد إرسالها
-    const token = new StellarSdk.Asset(ASSET_CODE, ISSUER_PUBLIC);
+    // تعريف العملة المراد إرسالها باستخدام المفتاح العام المستنتج
+    const token = new StellarSdk.Asset(ASSET_CODE, issuerPublicKey);
     
     // جلب بيانات حساب الموزع من البلوكتشين لمعرفة رقم العملية (Sequence)
     const distAccount = await server.loadAccount(distKP.publicKey());
@@ -43,11 +47,11 @@ exports.handler = async (event) => {
         networkPassphrase: NETWORK_PASSPHRASE,
       })
       .addOperation(StellarSdk.Operation.payment({
-        destination: destinationWallet, // محفظة المستخدم المستلم
-        asset: token,                   // عملة DONATE
-        amount: String(amount),         // الكمية (يجب أن تكون نصية String)
+        destination: destinationWallet, 
+        asset: token,                   
+        amount: String(amount),         
       }))
-      .setTimeout(180) // إيقاف المحاولة بعد 3 دقائق لتفادي التعليق
+      .setTimeout(180) 
       .build();
     
     // توقيع المعاملة بالمفتاح السري للموزع
@@ -74,7 +78,7 @@ exports.handler = async (event) => {
     if (e.response && e.response.data && e.response.data.extras) {
         const resultCodes = e.response.data.extras.result_codes;
         if (resultCodes && resultCodes.operations && resultCodes.operations.includes("op_no_trust")) {
-            errorMessage = "op_no_trust"; // تم تحديد هذه الكلمة لتلتقطها الواجهة (الفرونت إند)
+            errorMessage = "op_no_trust"; 
         } else {
             errorMessage = JSON.stringify(e.response.data.extras.result_codes);
         }
