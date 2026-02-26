@@ -13,3 +13,7 @@ from = "/api/pi/complete"
 to = "/.netlify/functions/pi_complete"
 status = 200
 force = true
+[[headers]]
+  for = "/.well-known/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
