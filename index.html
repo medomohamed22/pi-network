@@ -5,100 +5,296 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تطبيق مكافآت DONATE</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #6a1b9a; 
-            --secondary: #fb8c00; 
-            --bg: #f3f4f6; 
-            --text: #1f2937; 
-            --border: #e5e7eb;
+            --primary: #7c3aed; /* بنفسجي عصري */
+            --primary-hover: #6d28d9;
+            --secondary: #f59e0b; /* عنبري فاتح */
+            --secondary-hover: #d97706;
+            --bg-color: #f8fafc;
+            --surface: rgba(255, 255, 255, 0.95);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            --shadow-soft: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+            --shadow-glow: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
         }
+
         body { 
             font-family: 'Tajawal', sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
+            background: radial-gradient(circle at top right, #ede9fe, #f8fafc, #e0e7ff);
+            background-attachment: fixed;
+            color: var(--text-main); 
             margin: 0; 
             display: flex; 
             justify-content: center; 
-            align-items: flex-start; 
+            align-items: center; 
             min-height: 100vh; 
             padding: 2rem 1rem;
             box-sizing: border-box;
         }
+
         .container { 
-            background: white; padding: 2rem; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; 
+            background: var(--surface); 
+            padding: 2.5rem 2rem; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-soft), 0 0 0 1px rgba(255,255,255,0.5) inset;
+            backdrop-filter: blur(20px);
+            width: 100%; 
+            max-width: 480px; 
+            position: relative;
+            overflow: hidden;
         }
-        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem;}
-        p.subtitle { text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
+        /* لمسة إضاءة علوية في الحاوية */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+        }
+
+        h1 { 
+            color: var(--text-main); 
+            text-align: center; 
+            margin: 0 0 0.5rem 0; 
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        p.subtitle { 
+            text-align: center; 
+            color: var(--text-muted); 
+            font-size: 1rem; 
+            margin-bottom: 2rem; 
+        }
+
+        /* Segmented Control (Tabs) */
         .tabs { 
-            display: flex; flex-wrap: wrap; justify-content: center; 
-            margin-bottom: 2rem; background: #f9fafb; padding: 5px; 
-            border-radius: 12px; border: 1px solid var(--border);
+            display: flex; 
+            background: #f1f5f9; 
+            padding: 6px; 
+            border-radius: var(--radius-md); 
+            margin-bottom: 2rem;
+            position: relative;
         }
+        
         .tab-btn {
-            flex: 1; min-width: 120px; padding: 12px; border: none; background: transparent; 
-            font-family: inherit; font-weight: bold; cursor: pointer; 
-            border-radius: 8px; transition: 0.3s; color: #6b7280; font-size: 0.95rem;
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            background: transparent; 
+            font-family: inherit; 
+            font-weight: 700; 
+            cursor: pointer; 
+            border-radius: calc(var(--radius-md) - 4px); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted); 
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
         }
-        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .tab-btn.active { 
+            color: var(--primary); 
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
 
-        .form-section { display: none; animation: fadeIn 0.4s ease; }
+        .form-section { 
+            display: none; 
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
         .form-section.active { display: block; }
 
-        .form-group { text-align: right; margin-bottom: 1.2rem;}
-        label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #374151; font-size: 0.9rem;}
-        input { 
-            width: 100%; padding: 12px; border: 2px solid var(--border); 
-            border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
-            transition: 0.2s; direction: ltr; text-align: right;
+        .form-group { text-align: right; margin-bottom: 1.5rem;}
+        label { 
+            display: block; 
+            margin-bottom: 0.6rem; 
+            font-weight: 700; 
+            color: var(--text-main); 
+            font-size: 0.9rem;
         }
-        input:focus { border-color: var(--secondary); outline: none; }
         
-        .btn { 
-            background: #f3f4f6; color: #374151; border: 1px solid var(--border); 
-            padding: 14px 20px; border-radius: 12px; font-size: 1rem; cursor: pointer; 
-            font-weight: bold; transition: 0.3s; font-family: inherit; width: 100%; margin-bottom: 10px;
+        /* Inputs */
+        input { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border: 2px solid transparent; 
+            background: #f1f5f9;
+            border-radius: var(--radius-sm); 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease; 
+            direction: ltr; 
+            text-align: left;
+            color: var(--text-main);
         }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), #4a148c); color: white; border: none; }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(106, 27, 154, 0.2); }
-        .btn-secondary { background: linear-gradient(135deg, var(--secondary), #e65100); color: white; border: none; }
-        .btn-secondary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(251, 140, 0, 0.2); }
+        
+        input::placeholder { color: #94a3b8; text-align: right; }
+        input:focus { 
+            border-color: var(--primary); 
+            background: white;
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
 
+        /* Buttons */
+        .btn { 
+            width: 100%; 
+            padding: 16px 20px; 
+            border-radius: var(--radius-sm); 
+            font-size: 1.05rem; 
+            cursor: pointer; 
+            font-weight: 700; 
+            transition: all 0.3s ease; 
+            font-family: inherit; 
+            margin-bottom: 12px;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), #4f46e5); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4); 
+        }
+        .btn-primary:active { transform: translateY(0); }
+        
+        .btn-secondary { 
+            background: linear-gradient(135deg, var(--secondary), #f59e0b); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            animation: pulse-glow 2s infinite;
+        }
+        .btn-secondary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 16px rgba(245, 158, 11, 0.4); 
+            animation: none;
+        }
+
+        /* Alerts */
         .alert-warning {
-            background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
-            font-size: 0.85rem; color: #92400e; border: 1px solid #fcd34d; line-height: 1.6; text-align: right;
+            background: #fffbeb; 
+            padding: 14px 16px; 
+            border-radius: var(--radius-sm); 
+            margin-bottom: 20px; 
+            font-size: 0.9rem; 
+            color: #b45309; 
+            border-right: 4px solid var(--secondary);
+            line-height: 1.6; 
+            text-align: right;
         }
         .alert-success {
-            background: #dcfce7; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
-            font-size: 0.9rem; color: #166534; border: 1px solid #86efac; text-align: center; font-weight: bold;
+            background: #ecfdf5; 
+            padding: 14px 16px; 
+            border-radius: var(--radius-sm); 
+            margin-bottom: 20px; 
+            font-size: 0.95rem; 
+            color: #059669; 
+            border: 1px solid #a7f3d0; 
+            text-align: center; 
+            font-weight: 700;
         }
 
+        /* Balance Card (Web3 Style) */
         .balance-card {
-            background: linear-gradient(135deg, var(--primary), #4a148c); color: white;
-            padding: 25px 20px; border-radius: 15px; text-align: center; margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
+            background: linear-gradient(135deg, #1e1b4b, var(--primary)); 
+            color: white;
+            padding: 2rem 1.5rem; 
+            border-radius: var(--radius-md); 
+            text-align: center; 
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
         }
-        .balance-card h2 { margin: 0; font-size: 2.8rem; color: var(--secondary); text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
-        .balance-card p { margin: 8px 0 0; opacity: 0.9; font-size: 0.95rem; }
+        /* تأثير دائرة مضيئة داخل البطاقة */
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 150px; height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            filter: blur(20px);
+        }
+        
+        .balance-card h2 { 
+            margin: 0; 
+            font-size: 3.5rem; 
+            font-weight: 800;
+            color: #ffffff; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            line-height: 1;
+        }
+        .balance-card h2 span {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        .balance-card p { 
+            margin: 12px 0 0; 
+            color: #e2e8f0; 
+            font-size: 0.95rem; 
+            font-weight: 500;
+        }
 
-        /* نظام الإشعارات الأنيق (Toast) */
+        /* Toast Notifications */
         #toast {
-            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
-            text-align: center; border-radius: 8px; padding: 16px;
-            position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%);
-            bottom: 30px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            font-family: 'Tajawal', sans-serif; font-weight: 500;
+            visibility: hidden; 
+            min-width: 280px; 
+            background: rgba(15, 23, 42, 0.95); 
+            color: #fff;
+            text-align: center; 
+            border-radius: 99px; 
+            padding: 14px 24px;
+            position: fixed; 
+            z-index: 1000; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(20px);
+            bottom: 40px; 
+            font-size: 0.95rem; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-family: 'Tajawal', sans-serif; 
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         #toast.show {
-            visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            visibility: visible; 
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
+        #toast.error { background: rgba(220, 38, 38, 0.95); }
+        #toast.success { background: rgba(16, 185, 129, 0.95); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
-        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+        /* Animations */
+        @keyframes slideUpFade { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
     </style>
 </head>
 <body>
@@ -115,21 +311,26 @@
         <div id="home" class="form-section active">
             
             <div id="loginSection">
-                <div class="alert-warning" style="text-align: center;">
+                <div class="alert-warning">
                     يجب تسجيل الدخول باستخدام حساب Pi الخاص بك للبدء في جمع وتخزين عملات DONATE.
                 </div>
-                <button id="btnLogin" class="btn btn-primary">حساب Pi (Login) تسجيل الدخول</button>
+                <button id="btnLogin" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                    تسجيل الدخول باستخدام Pi
+                </button>
             </div>
 
             <div id="dashboardSection" style="display: none;">
                 <div class="alert-success" id="welcomeMsg">مرحباً بك!</div>
                 
                 <div class="balance-card">
-                    <h2 id="virtualBalance">0.00</h2>
-                    <p>DONATE (الرصيد المتاح للسحب)</p>
+                    <h2><span id="virtualBalance">0.00</span><span>DONATE</span></h2>
+                    <p>الرصيد المتاح للسحب</p>
                 </div>
 
-                <button id="btnClaimReward" class="btn btn-secondary">🎁 احصل على مكافأة اليوم (0.01 DONATE)</button>
+                <button id="btnClaimReward" class="btn btn-secondary">
+                    🎁 احصل على مكافأة اليوم (0.01)
+                </button>
             </div>
         </div>
 
@@ -141,14 +342,17 @@
 
             <div class="form-group">
                 <label>عنوان محفظة Pi الخاصة بك (للاستلام)</label>
-                <input type="text" id="walletAddress" placeholder="GBQ3H...">
+                <input type="text" id="walletAddress" placeholder="يجب أن يبدأ بحرف G...">
             </div>
             <div class="form-group">
                 <label>الكمية المراد سحبها</label>
-                <input type="number" id="withdrawAmount" placeholder="مثال: 0.05" step="0.01">
+                <input type="number" id="withdrawAmount" placeholder="0.00" step="0.01">
             </div>
 
-            <button id="btnWithdraw" class="btn btn-primary">💸 تأكيد السحب</button>
+            <button id="btnWithdraw" class="btn btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                تأكيد السحب الآن
+            </button>
         </div>
     </div>
 
@@ -163,9 +367,8 @@
         function showToast(message, isError = false) {
             const toast = document.getElementById("toast");
             toast.textContent = message;
-            toast.style.backgroundColor = isError ? "#ef4444" : "#10b981"; // أحمر للخطأ، أخضر للنجاح
-            toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+            toast.className = isError ? "show error" : "show success";
+            setTimeout(() => { toast.className = toast.className.replace("show", "").trim(); }, 3500);
         }
 
         function switchTab(tabId, btn) {
@@ -191,7 +394,6 @@
             return data;
         }
 
-        // حفظ وجلب بيانات الرصيد الخاص بالمستخدم من المتصفح
         function loadUserData(uid) {
             const savedData = localStorage.getItem(`donate_app_${uid}`);
             if (savedData) {
@@ -210,57 +412,53 @@
             document.getElementById("virtualBalance").innerText = userVirtualBalance.toFixed(2);
         }
 
-        // 1. تهيئة Pi SDK
         document.addEventListener("DOMContentLoaded", () => {
             const Pi = window.Pi;
             if (Pi) {
-                // تم ضبط sandbox إلى false بناءً على طلبك
                 Pi.init({ version: "2.0", sandbox: false }); 
             } else {
-                showToast("تأكيد: يجب فتح الموقع من داخل Pi Browser.", true);
+                showToast("تأكيد: يجب فتح الموقع من داخل متصفح Pi Browser.", true);
             }
         });
 
-        // 2. تسجيل الدخول
         document.getElementById("btnLogin").addEventListener("click", async () => {
             const Pi = window.Pi;
             if (!Pi) return showToast("الرجاء فتح التطبيق من متصفح Pi Browser.", true);
             
+            const btn = document.getElementById("btnLogin");
+            const originalContent = btn.innerHTML;
+            
             try {
-                const btn = document.getElementById("btnLogin");
-                btn.innerText = "جاري تسجيل الدخول...";
+                btn.innerHTML = "⏳ جاري تسجيل الدخول...";
                 btn.disabled = true;
 
                 const auth = await Pi.authenticate(["username"], (payment) => { console.log("Incomplete payment", payment); });
                 currentUser = auth.user;
                 
-                // تحديث الواجهة عند النجاح
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("dashboardSection").style.display = "block";
-                document.getElementById("welcomeMsg").innerText = `مرحباً بك يا ${currentUser.username}!`;
+                document.getElementById("welcomeMsg").innerText = `مرحباً بك يا ${currentUser.username} ✨`;
                 
                 loadUserData(currentUser.uid);
                 showToast("تم تسجيل الدخول بنجاح!");
             } catch (e) {
-                document.getElementById("btnLogin").innerText = "حساب Pi (Login) تسجيل الدخول";
-                document.getElementById("btnLogin").disabled = false;
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
                 showToast("فشل تسجيل الدخول. حاول مجدداً.", true);
                 console.error(e);
             }
         });
 
-        // 3. المطالبة بالمكافأة اليومية (بحد أقصى مرة كل يوم)
         document.getElementById("btnClaimReward").addEventListener("click", () => {
             if (!currentUser) return showToast("الرجاء تسجيل الدخول أولاً.", true);
             
-            const today = new Date().toDateString(); // تاريخ اليوم
+            const today = new Date().toDateString(); 
             const lastClaim = localStorage.getItem(`donate_claim_${currentUser.uid}`);
             
             if (lastClaim === today) {
                 return showToast("لقد حصلت على مكافأة اليوم بالفعل! عُد غداً.", true);
             }
             
-            // إضافة الرصيد وحفظه
             userVirtualBalance += 0.01;
             localStorage.setItem(`donate_claim_${currentUser.uid}`, today);
             saveUserData(currentUser.uid);
@@ -269,48 +467,46 @@
             showToast("🎉 مبروك! تمت إضافة 0.01 DONATE إلى رصيدك.");
         });
 
-        // 4. سحب الرصيد
         document.getElementById("btnWithdraw").addEventListener("click", async () => {
             if (!currentUser) return showToast("الرجاء تسجيل الدخول أولاً.", true);
             
             const address = document.getElementById("walletAddress").value.trim();
             const amount = parseFloat(document.getElementById("withdrawAmount").value.trim());
             const btn = document.getElementById("btnWithdraw");
+            const originalContent = btn.innerHTML;
 
             if (!address || address.length < 50 || !address.startsWith("G")) {
-                return showToast("عنوان المحفظة غير صحيح. يجب أن يبدأ بحرف G.", true);
+                return showToast("عنوان المحفظة غير صحيح. تأكد من نسخه بالكامل.", true);
             }
             if (isNaN(amount) || amount <= 0 || amount > userVirtualBalance) {
                 return showToast(`الكمية غير صالحة. رصيدك الحالي: ${userVirtualBalance.toFixed(2)}`, true);
             }
 
             try {
-                btn.innerText = "جاري معالجة السحب...";
+                btn.innerHTML = "⏳ جاري معالجة السحب...";
                 btn.disabled = true;
 
-                // إرسال الطلب إلى الباك إند
                 const data = await apiPost("/.netlify/functions/withdraw_token", {
                     destinationWallet: address,
                     amount: amount.toString()
                 });
 
-                // خصم الرصيد بعد نجاح المعاملة
                 userVirtualBalance -= amount;
                 saveUserData(currentUser.uid);
                 updateBalanceDisplay();
                 
-                showToast("✅ تمت عملية السحب بنجاح إلى محفظتك!");
+                showToast("✅ نجاح! تم إرسال العملات إلى محفظتك.");
                 document.getElementById("withdrawAmount").value = "";
                 
             } catch (e) {
                 console.error(e);
                 if (e.message.includes("op_no_trust")) {
-                    showToast("المحفظة لا تدعم عملة DONATE. أضف خط الثقة أولاً.", true);
+                    showToast("المحفظة لا تدعم عملة DONATE. أضف خط الثقة أولاً من محفظتك.", true);
                 } else {
                     showToast("فشل السحب، يرجى المحاولة لاحقاً.", true);
                 }
             } finally {
-                btn.innerText = "💸 تأكيد السحب";
+                btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
         });
