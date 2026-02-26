@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق مكافآت DONATE (Pi Testnet)</title>
+    <title>تطبيق مكافآت DONATE</title>
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -28,9 +28,9 @@
         }
         .container { 
             background: white; padding: 2rem; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; 
         }
-        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem;}
         p.subtitle { text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
         .tabs { 
@@ -59,7 +59,7 @@
         
         .btn { 
             background: #f3f4f6; color: #374151; border: 1px solid var(--border); 
-            padding: 12px 20px; border-radius: 10px; font-size: 0.95rem; cursor: pointer; 
+            padding: 14px 20px; border-radius: 12px; font-size: 1rem; cursor: pointer; 
             font-weight: bold; transition: 0.3s; font-family: inherit; width: 100%; margin-bottom: 10px;
         }
         .btn-primary { background: linear-gradient(135deg, var(--primary), #4a148c); color: white; border: none; }
@@ -67,38 +67,45 @@
         .btn-secondary { background: linear-gradient(135deg, var(--secondary), #e65100); color: white; border: none; }
         .btn-secondary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(251, 140, 0, 0.2); }
 
-        .log-box {
-            margin-top: 1.5rem; padding: 1rem; border-radius: 10px; font-size: 0.85rem; 
-            text-align: left; direction: ltr; background: #111827; color: #10b981; 
-            font-family: monospace; white-space: pre-wrap; word-break: break-all;
-            max-height: 200px; overflow-y: auto; border: 4px solid #374151;
-        }
-
         .alert-warning {
             background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
             font-size: 0.85rem; color: #92400e; border: 1px solid #fcd34d; line-height: 1.6; text-align: right;
         }
         .alert-success {
             background: #dcfce7; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
-            font-size: 0.85rem; color: #166534; border: 1px solid #86efac; text-align: center; font-weight: bold;
+            font-size: 0.9rem; color: #166534; border: 1px solid #86efac; text-align: center; font-weight: bold;
         }
 
         .balance-card {
             background: linear-gradient(135deg, var(--primary), #4a148c); color: white;
-            padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;
+            padding: 25px 20px; border-radius: 15px; text-align: center; margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(106, 27, 154, 0.3);
         }
-        .balance-card h2 { margin: 0; font-size: 2.5rem; color: var(--secondary); }
-        .balance-card p { margin: 5px 0 0; opacity: 0.9; font-size: 0.9rem; }
+        .balance-card h2 { margin: 0; font-size: 2.8rem; color: var(--secondary); text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .balance-card p { margin: 8px 0 0; opacity: 0.9; font-size: 0.95rem; }
+
+        /* نظام الإشعارات الأنيق (Toast) */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 8px; padding: 16px;
+            position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%);
+            bottom: 30px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-family: 'Tajawal', sans-serif; font-weight: 500;
+        }
+        #toast.show {
+            visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>تطبيق مكافآت DONATE</h1>
-        <p class="subtitle">سجل دخولك يومياً واربح عملات مجانية!</p>
+        <p class="subtitle">سجل دخولك يومياً واربح عملات مجانية بسهولة!</p>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('home', this)">الرئيسية (الرصيد)</button>
@@ -109,7 +116,7 @@
             
             <div id="loginSection">
                 <div class="alert-warning" style="text-align: center;">
-                    يجب تسجيل الدخول باستخدام حساب Pi الخاص بك للبدء في جمع عملات DONATE.
+                    يجب تسجيل الدخول باستخدام حساب Pi الخاص بك للبدء في جمع وتخزين عملات DONATE.
                 </div>
                 <button id="btnLogin" class="btn btn-primary">حساب Pi (Login) تسجيل الدخول</button>
             </div>
@@ -129,11 +136,11 @@
         <div id="withdraw" class="form-section">
             <div class="alert-warning">
                 ⚠️ <strong>خطوة إجبارية قبل السحب:</strong><br>
-                لن تقبل شبكة Pi التحويل إلا إذا قمت بإضافة عملة <b>DONATE</b> إلى محفظتك أولاً (إضافة خط ثقة / Trustline). إذا لم تفعل ذلك، ستفشل عملية السحب!
+                لن تقبل الشبكة التحويل إلا إذا قمت بإضافة عملة <b>DONATE</b> إلى محفظتك أولاً (إضافة خط ثقة). إذا لم تفعل ذلك، ستفشل عملية السحب!
             </div>
 
             <div class="form-group">
-                <label>عنوان محفظة Pi الخاصة بك (التي ستستقبل العملات)</label>
+                <label>عنوان محفظة Pi الخاصة بك (للاستلام)</label>
                 <input type="text" id="walletAddress" placeholder="GBQ3H...">
             </div>
             <div class="form-group">
@@ -143,29 +150,32 @@
 
             <button id="btnWithdraw" class="btn btn-primary">💸 تأكيد السحب</button>
         </div>
-
-        <div id="logBox" class="log-box">Log Console Ready...</div>
     </div>
 
+    <div id="toast"></div>
+
     <script>
-        const BACKEND_URL = ""; // اتركها فارغة إذا كان الفرونت إند والباك إند على نفس الموقع
+        const BACKEND_URL = ""; // اتركها فارغة إذا كان الفرونت والباك على نفس الموقع
         let currentUser = null;
-        let userVirtualBalance = 0.00; // رصيد افتراضي (يُفضل ربطه بقاعدة بيانات حقيقية لاحقاً)
+        let userVirtualBalance = 0.00;
+
+        // دالة عرض الإشعارات للمستخدم
+        function showToast(message, isError = false) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.style.backgroundColor = isError ? "#ef4444" : "#10b981"; // أحمر للخطأ، أخضر للنجاح
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
 
         function switchTab(tabId, btn) {
+            if (!currentUser && tabId === 'withdraw') {
+                return showToast("الرجاء تسجيل الدخول أولاً للوصول إلى السحب.", true);
+            }
             document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
-        }
-
-        function log(...args) {
-            const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
-            const el = document.getElementById("logBox");
-            if (el) {
-                const time = new Date().toLocaleTimeString();
-                el.textContent = `[${time}] ${line}\n` + el.textContent;
-            }
         }
 
         async function apiPost(path, body) {
@@ -181,88 +191,127 @@
             return data;
         }
 
-        // 1. تهيئة Pi SDK وتسجيل الدخول
-        document.addEventListener("DOMContentLoaded", () => {
-            const Pi = window.Pi;
-            if (Pi) {
-                Pi.init({ version: "2.0", sandbox: true }); // Testnet
-                log("✅ Pi SDK Initialized (Sandbox: false)");
+        // حفظ وجلب بيانات الرصيد الخاص بالمستخدم من المتصفح
+        function loadUserData(uid) {
+            const savedData = localStorage.getItem(`donate_app_${uid}`);
+            if (savedData) {
+                userVirtualBalance = parseFloat(JSON.parse(savedData).balance) || 0;
             } else {
-                log("❌ لا يمكن العثور على Pi SDK. تأكد من فتح الموقع داخل Pi Browser.");
+                userVirtualBalance = 0.00;
             }
-        });
-
-        document.getElementById("btnLogin").addEventListener("click", async () => {
-            const Pi = window.Pi;
-            if (!Pi) return log("❌ يجب فتح التطبيق من متصفح Pi Browser.");
-            
-            try {
-                log("⏳ جاري تسجيل الدخول...");
-                const auth = await Pi.authenticate(["username"], (payment) => { log("Incomplete payment", payment); });
-                currentUser = auth.user;
-                
-                // تحديث الواجهة
-                document.getElementById("loginSection").style.display = "none";
-                document.getElementById("dashboardSection").style.display = "block";
-                document.getElementById("welcomeMsg").innerText = `مرحباً بك يا ${currentUser.username}!`;
-                log(`✅ تم تسجيل الدخول بنجاح: ${currentUser.username}`);
-                
-                // هنا تقوم بجلب رصيد المستخدم من قاعدة البيانات (DB). حالياً نضع رصيد وهمي للتجربة.
-                updateBalanceDisplay();
-            } catch (e) {
-                log("❌ فشل تسجيل الدخول:", e.message || e);
-            }
-        });
-
-        // 2. المطالبة بالمكافأة اليومية
-        document.getElementById("btnClaimReward").addEventListener("click", () => {
-            if (!currentUser) return log("❌ الرجاء تسجيل الدخول أولاً.");
-            
-            log("⏳ جاري تسجيل المكافأة...");
-            // في التطبيق الحقيقي: ترسل طلب للباك إند وتتأكد أنه لم يجمعها اليوم.
-            // apiPost("/.netlify/functions/claim_reward", { uid: currentUser.uid })
-            
-            userVirtualBalance += 0.01;
             updateBalanceDisplay();
-            log("✅ تمت إضافة 0.01 DONATE إلى رصيدك!");
-        });
+        }
+
+        function saveUserData(uid) {
+            localStorage.setItem(`donate_app_${uid}`, JSON.stringify({ balance: userVirtualBalance }));
+        }
 
         function updateBalanceDisplay() {
             document.getElementById("virtualBalance").innerText = userVirtualBalance.toFixed(2);
         }
 
-        // 3. سحب الرصيد إلى المحفظة
+        // 1. تهيئة Pi SDK
+        document.addEventListener("DOMContentLoaded", () => {
+            const Pi = window.Pi;
+            if (Pi) {
+                // تم ضبط sandbox إلى false بناءً على طلبك
+                Pi.init({ version: "2.0", sandbox: false }); 
+            } else {
+                showToast("تأكيد: يجب فتح الموقع من داخل Pi Browser.", true);
+            }
+        });
+
+        // 2. تسجيل الدخول
+        document.getElementById("btnLogin").addEventListener("click", async () => {
+            const Pi = window.Pi;
+            if (!Pi) return showToast("الرجاء فتح التطبيق من متصفح Pi Browser.", true);
+            
+            try {
+                const btn = document.getElementById("btnLogin");
+                btn.innerText = "جاري تسجيل الدخول...";
+                btn.disabled = true;
+
+                const auth = await Pi.authenticate(["username"], (payment) => { console.log("Incomplete payment", payment); });
+                currentUser = auth.user;
+                
+                // تحديث الواجهة عند النجاح
+                document.getElementById("loginSection").style.display = "none";
+                document.getElementById("dashboardSection").style.display = "block";
+                document.getElementById("welcomeMsg").innerText = `مرحباً بك يا ${currentUser.username}!`;
+                
+                loadUserData(currentUser.uid);
+                showToast("تم تسجيل الدخول بنجاح!");
+            } catch (e) {
+                document.getElementById("btnLogin").innerText = "حساب Pi (Login) تسجيل الدخول";
+                document.getElementById("btnLogin").disabled = false;
+                showToast("فشل تسجيل الدخول. حاول مجدداً.", true);
+                console.error(e);
+            }
+        });
+
+        // 3. المطالبة بالمكافأة اليومية (بحد أقصى مرة كل يوم)
+        document.getElementById("btnClaimReward").addEventListener("click", () => {
+            if (!currentUser) return showToast("الرجاء تسجيل الدخول أولاً.", true);
+            
+            const today = new Date().toDateString(); // تاريخ اليوم
+            const lastClaim = localStorage.getItem(`donate_claim_${currentUser.uid}`);
+            
+            if (lastClaim === today) {
+                return showToast("لقد حصلت على مكافأة اليوم بالفعل! عُد غداً.", true);
+            }
+            
+            // إضافة الرصيد وحفظه
+            userVirtualBalance += 0.01;
+            localStorage.setItem(`donate_claim_${currentUser.uid}`, today);
+            saveUserData(currentUser.uid);
+            
+            updateBalanceDisplay();
+            showToast("🎉 مبروك! تمت إضافة 0.01 DONATE إلى رصيدك.");
+        });
+
+        // 4. سحب الرصيد
         document.getElementById("btnWithdraw").addEventListener("click", async () => {
-            if (!currentUser) return log("❌ الرجاء تسجيل الدخول أولاً.");
+            if (!currentUser) return showToast("الرجاء تسجيل الدخول أولاً.", true);
             
             const address = document.getElementById("walletAddress").value.trim();
             const amount = parseFloat(document.getElementById("withdrawAmount").value.trim());
+            const btn = document.getElementById("btnWithdraw");
 
             if (!address || address.length < 50 || !address.startsWith("G")) {
-                return log("❌ خطأ: عنوان المحفظة غير صحيح. يجب أن يبدأ بحرف G.");
+                return showToast("عنوان المحفظة غير صحيح. يجب أن يبدأ بحرف G.", true);
             }
             if (isNaN(amount) || amount <= 0 || amount > userVirtualBalance) {
-                return log(`❌ خطأ: الكمية غير صالحة أو رصيدك غير كافٍ. رصيدك الحالي: ${userVirtualBalance}`);
+                return showToast(`الكمية غير صالحة. رصيدك الحالي: ${userVirtualBalance.toFixed(2)}`, true);
             }
 
             try {
-                log(`⏳ جاري معالجة السحب (${amount} DONATE) إلى المحفظة المحددة...`);
-                // إرسال الطلب إلى الباك إند (Netlify Function)
+                btn.innerText = "جاري معالجة السحب...";
+                btn.disabled = true;
+
+                // إرسال الطلب إلى الباك إند
                 const data = await apiPost("/.netlify/functions/withdraw_token", {
                     destinationWallet: address,
                     amount: amount.toString()
                 });
 
-                log("✅ نجاح! تم إرسال العملات إلى محفظتك بنجاح. معرف المعاملة:", data.hash);
-                
                 // خصم الرصيد بعد نجاح المعاملة
                 userVirtualBalance -= amount;
+                saveUserData(currentUser.uid);
                 updateBalanceDisplay();
+                
+                showToast("✅ تمت عملية السحب بنجاح إلى محفظتك!");
+                document.getElementById("withdrawAmount").value = "";
+                
             } catch (e) {
-                log("❌ فشل السحب:", e.message);
+                console.error(e);
                 if (e.message.includes("op_no_trust")) {
-                    log("⚠️ تنبيه هام: المحفظة المستلمة لم تقم بإضافة عملة DONATE. يجب إضافة خط الثقة (Trustline) أولاً من داخل Pi Wallet.");
+                    showToast("المحفظة لا تدعم عملة DONATE. أضف خط الثقة أولاً.", true);
+                } else {
+                    showToast("فشل السحب، يرجى المحاولة لاحقاً.", true);
                 }
+            } finally {
+                btn.innerText = "💸 تأكيد السحب";
+                btn.disabled = false;
             }
         });
     </script>
