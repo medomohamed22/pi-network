@@ -278,7 +278,7 @@
     <div id="toast"></div>
 
     <script>
-        const BACKEND_URL = ""; // ضع الدومين الخاص بك إذا كان الباك إند منفصلاً
+        const BACKEND_URL = ""; // يتم تركه فارغاً إذا كان على نفس الاستضافة
         const HORIZON = "https://api.testnet.minepi.com";
 
         // --- واجهة المستخدم (UI Functions) ---
@@ -340,7 +340,7 @@
         }
         window.onload = loadLocal;
 
-        // --- دوال البلوكتشين المباشرة (Horizon API - قراءة فقط) ---
+        // --- دوال البلوكتشين المباشرة (Horizon API - جلب بيانات حقيقية) ---
         async function fetchHorizonAsset() {
             const code = normalize(document.getElementById('assetCode').value);
             const issuer = document.getElementById('issuerPub').value.trim();
@@ -356,14 +356,14 @@
                     renderTable(
                         ["معلومة", "القيمة"],
                         [
-                            ["إجمالي المعروض (Total Supply)", `<span class="badge badge-green">${asset.amount}</span>`],
-                            ["المحافظ الموثقة (Holders)", asset.num_accounts],
+                            ["إجمالي المعروض الحالي (Supply)", `<span class="badge badge-green">${asset.amount} ${code}</span>`],
+                            ["المحافظ التي تمتلك العملة (Holders)", `<span class="badge badge-green">${asset.num_accounts} محفظة</span>`],
                             ["الحسابات المانعة للثقة", asset.num_claimable_balances || "0"],
-                            ["نوع العملة", asset.asset_type]
+                            ["نوع العملة (Asset Type)", asset.asset_type]
                         ],
                         "assetStatsContainer"
                     );
-                    showToast("✅ تم جلب الإحصائيات بنجاح.");
+                    showToast("✅ تم جلب الإحصائيات الحقيقية بنجاح.");
                 } else {
                     renderTable(["النتيجة"], [["العملة غير موجودة على الشبكة، أو لم يتم إصدارها بعد."]], "assetStatsContainer");
                 }
@@ -434,7 +434,6 @@
         }
 
         async function fetchPoolInfo() {
-            // يتم جلب السيولة للمجمعات (Advanced Topic in Horizon API)
             showToast("سيتم عرض بيانات السيولة هنا (قيد التطوير في Horizon API).");
         }
 
@@ -457,7 +456,18 @@
             }
         }
 
-        // ربط الأزرار
+        // --- ربط الأزرار بخدمات الباك إند الفعلية ---
+        
+        // 1. زر إصدار العملة
+        document.getElementById("btnBootstrap").addEventListener("click", () => {
+            callBackend("/.netlify/functions/token_bootstrap", {
+                assetCode: normalize(document.getElementById('assetCode').value),
+                displayName: document.getElementById("displayName").value,
+                initialSupply: document.getElementById("initialSupply").value
+            }, "✅ تمت عملية إصدار العملة بنجاح!");
+        });
+
+        // 2. إنشاء عرض بيع
         document.getElementById("btnSellOffer").addEventListener("click", () => {
             callBackend("/.netlify/functions/dex_sell_offer", {
                 assetCode: normalize(document.getElementById('assetCode').value),
@@ -466,9 +476,9 @@
             }, "✅ تم إنشاء عرض البيع بنجاح!");
         });
 
-        // زر الشراء (جديد)
+        // 3. إنشاء عرض شراء
         document.getElementById("btnBuyOffer").addEventListener("click", () => {
-            callBackend("/.netlify/functions/bot_trade", { // Using bot_trade logic or a new dex_buy_offer
+            callBackend("/.netlify/functions/bot_trade", { 
                 assetCode: normalize(document.getElementById('assetCode').value),
                 action: "buy_token",
                 amount: document.getElementById("dexAmount").value,
@@ -476,29 +486,63 @@
             }, "✅ تم إنشاء عرض الشراء بنجاح!");
         });
 
+        // 4. ضخ السيولة
         document.getElementById("btnAddAmm").addEventListener("click", () => {
             callBackend("/.netlify/functions/amm_add_liquidity", {
                 assetCode: normalize(document.getElementById('assetCode').value),
                 tokenAmount: document.getElementById("ammTokenAmount").value,
                 piAmount: document.getElementById("ammPiAmount").value
-            }, "✅ تمت إضافة السيولة للمجمع!");
+            }, "✅ تمت إضافة السيولة للمجمع بنجاح!");
         });
 
+        // 5. التوزيع المجمّع (Airdrop)
         document.getElementById("btnAirdrop").addEventListener("click", () => {
-            // ملاحظة: يتطلب برمجة مسار airdrop في الباك إند
-            showToast("⏳ تم إرسال طلب التوزيع المجمّع للباك إند...");
+            const addressesText = document.getElementById("airdropAddresses").value;
+            // فصل السطور وفلترة العناوين الصحيحة التي تبدأ بـ G
+            const addressesArray = addressesText.split('\n').map(a => a.trim()).filter(a => a.length >= 50 && a.startsWith('G'));
+            
+            if (addressesArray.length === 0) return showToast("❌ يرجى إدخال محفظة واحدة صحيحة على الأقل.", "error");
+
+            callBackend("/.netlify/functions/airdrop", {
+                assetCode: normalize(document.getElementById('assetCode').value),
+                addresses: addressesArray,
+                amount: document.getElementById("airdropAmount").value
+            }, `✅ تم إرسال العملات إلى ${addressesArray.length} محفظة بنجاح!`);
         });
 
+        // 6. حرق التوكين (Burn)
         document.getElementById("btnBurn").addEventListener("click", () => {
-             // ملاحظة: يتطلب برمجة مسار burn في الباك إند
-            showToast("🔥 تم إرسال طلب الحرق للباك إند...");
+            const amount = document.getElementById("burnAmount").value;
+            if (!amount || amount <= 0) return showToast("❌ يرجى إدخال كمية صحيحة للحرق.", "error");
+
+            if (confirm(`⚠️ تحذير خطير: هل أنت متأكد أنك تريد حرق وإعدام ${amount} توكين نهائياً؟ لا يمكن التراجع عن هذا الإجراء!`)) {
+                callBackend("/.netlify/functions/burn_token", {
+                    assetCode: normalize(document.getElementById('assetCode').value),
+                    amount: amount
+                }, `🔥 تم حرق ${amount} توكين وتقليل المعروض الكلي بنجاح!`);
+            }
         });
 
+        // 7. توليد ملف TOML
         document.getElementById("btnGenPiToml").addEventListener("click", () => {
             const code = document.getElementById("verAssetCode").value;
             const issuer = document.getElementById("issuerPub").value;
-            document.getElementById("tomlOut").value = `[[CURRENCIES]]\ncode="${code}"\nissuer="${issuer}"\ndisplay_decimals=7`;
+            const domain = document.getElementById("verDomain").value;
+            const image = document.getElementById("verImage").value;
+            
+            document.getElementById("tomlOut").value = `NETWORK_PASSPHRASE="Pi Testnet"\nHORIZON_URL="https://api.testnet.minepi.com"\n\n[[CURRENCIES]]\ncode="${code}"\nissuer="${issuer}"\ndisplay_decimals=7\nimage="${image}"`;
             showToast("✅ تم توليد الكود المصغر بنجاح.");
+        });
+
+        // 8. ربط الدومين بالمُصدر
+        document.getElementById("btnSetHomeDomain").addEventListener("click", () => {
+            const domain = document.getElementById("hdDomain").value.trim();
+            if (!domain) return showToast("❌ يرجى كتابة الدومين المراد ربطه.", "error");
+
+            callBackend("/.netlify/functions/set_domain", {
+                domain: domain,
+                assetCode: normalize(document.getElementById('assetCode').value)
+            }, "✅ تم ربط الدومين بالمُصدر بنجاح!");
         });
     </script>
 </body>
