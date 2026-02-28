@@ -353,11 +353,16 @@
                 
                 if (data._embedded && data._embedded.records.length > 0) {
                     const asset = data._embedded.records[0];
+                    
+                    // 💡 التعديل السحري: قراءة البيانات سواء من الإصدار القديم أو الجديد لـ Horizon API
+                    const totalSupply = asset.amount || (asset.balances && asset.balances.authorized) || "0";
+                    const holdersCount = asset.num_accounts || (asset.accounts && asset.accounts.authorized) || "0";
+                    
                     renderTable(
                         ["معلومة", "القيمة"],
                         [
-                            ["إجمالي المعروض الحالي (Supply)", `<span class="badge badge-green">${asset.amount} ${code}</span>`],
-                            ["المحافظ التي تمتلك العملة (Holders)", `<span class="badge badge-green">${asset.num_accounts} محفظة</span>`],
+                            ["إجمالي المعروض الحالي (Supply)", `<span class="badge badge-green">${totalSupply} ${code}</span>`],
+                            ["المحافظ التي تمتلك العملة (Holders)", `<span class="badge badge-green">${holdersCount} محفظة</span>`],
                             ["الحسابات المانعة للثقة", asset.num_claimable_balances || "0"],
                             ["نوع العملة (Asset Type)", asset.asset_type]
                         ],
@@ -368,6 +373,7 @@
                     renderTable(["النتيجة"], [["العملة غير موجودة على الشبكة، أو لم يتم إصدارها بعد."]], "assetStatsContainer");
                 }
             } catch (e) {
+                console.error(e);
                 showToast("❌ فشل الاتصال بشبكة Horizon.", "error");
             }
         }
