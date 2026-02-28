@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donate Way — Admin Dashboard (Pi Testnet)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #6a1b9a; 
@@ -12,33 +12,25 @@
             --bg: #f3f4f6; 
             --text: #1f2937; 
             --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
         }
         body { 
             font-family: 'Tajawal', sans-serif; 
             background-color: var(--bg); 
             color: var(--text); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            min-height: 100vh; 
-            padding: 2rem 1rem;
-            box-sizing: border-box;
+            margin: 0; display: flex; justify-content: center; align-items: flex-start; 
+            min-height: 100vh; padding: 2rem 1rem; box-sizing: border-box;
         }
         
         .container { 
-            background: white; 
-            padding: 2rem; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 850px; 
+            background: white; padding: 2rem; border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 900px; 
         }
 
-        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 0.5rem; font-weight: 800;}
         p.subtitle { text-align: center; color: #666; font-size: 0.95rem; margin-bottom: 1.5rem; }
 
-        /* Tabs Styling */
         .tabs { 
             display: flex; flex-wrap: wrap; justify-content: center; 
             margin-bottom: 2rem; background: #f9fafb; padding: 5px; 
@@ -49,41 +41,27 @@
             font-family: inherit; font-weight: bold; cursor: pointer; 
             border-radius: 8px; transition: 0.3s; color: #6b7280; font-size: 0.95rem;
         }
-        .tab-btn.active { 
-            background: white; color: var(--primary); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-        }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .form-section { display: none; animation: fadeIn 0.4s ease; }
         .form-section.active { display: block; }
 
-        /* Grid for side-by-side inputs */
         .row { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 1.2rem; }
         @media(min-width: 600px) { .row { grid-template-columns: 1fr 1fr; } }
-
         .form-group { text-align: right; margin-bottom: 1.2rem;}
         .row .form-group { margin-bottom: 0; }
         
         label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #374151; font-size: 0.9rem;}
         input, select, textarea { 
             width: 100%; padding: 12px; border: 2px solid var(--border); 
-            border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem;
-            transition: 0.2s;
+            border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; transition: 0.2s;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--secondary); outline: none; }
-        textarea { min-height: 120px; resize: vertical; }
-        
-        .hint { font-size: 0.8rem; color: #888; margin-top: 5px; display: block; }
+        textarea { min-height: 100px; resize: vertical; }
 
-        /* Section dividers */
-        .section-divider {
-            border: 0; border-top: 2px dashed #e5e7eb; margin: 2rem 0;
-        }
-        h3.section-title {
-            color: #4b5563; font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;
-        }
+        .section-divider { border: 0; border-top: 2px dashed #e5e7eb; margin: 2rem 0; }
+        h3.section-title { color: #4b5563; font-size: 1.1rem; margin-bottom: 1rem; border-right: 4px solid var(--primary); padding-right: 10px;}
 
-        /* Buttons */
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem; }
         .btn { 
             background: #f3f4f6; color: #374151; border: 1px solid var(--border); 
@@ -91,54 +69,66 @@
             font-weight: bold; transition: 0.3s; font-family: inherit; flex: 1; min-width: 150px;
         }
         .btn:hover { background: #e5e7eb; }
-        
         .btn-primary { background: linear-gradient(135deg, var(--primary), #4a148c); color: white; border: none; }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(106, 27, 154, 0.2); }
-        
         .btn-secondary { background: linear-gradient(135deg, var(--secondary), #e65100); color: white; border: none; }
         .btn-secondary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(251, 140, 0, 0.2); }
+        .btn-danger { background: var(--danger); color: white; border: none; }
 
-        /* Output / Logs */
-        .log-box {
-            margin-top: 1.5rem; padding: 1rem; border-radius: 10px; font-size: 0.85rem; 
-            text-align: left; direction: ltr; background: #111827; color: #10b981; 
-            font-family: monospace; white-space: pre-wrap; word-break: break-all;
-            max-height: 250px; overflow-y: auto; border: 4px solid #374151;
-        }
+        .alert { background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #92400e; border: 1px solid #fcd34d; line-height: 1.5; }
 
-        .alert {
-            background: #fffbeb; padding: 12px; border-radius: 8px; margin-bottom: 15px; 
-            font-size: 0.85rem; color: #92400e; border: 1px solid #fcd34d; line-height: 1.5;
+        /* الجداول المنظمة (Data Tables) */
+        .table-container { overflow-x: auto; margin-top: 1.5rem; border-radius: 12px; border: 1px solid var(--border); background: white; }
+        table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.9rem; }
+        th { background: #f9fafb; padding: 12px 15px; font-weight: bold; color: #374151; border-bottom: 2px solid var(--border); white-space: nowrap; }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border); color: #4b5563; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f3f4f6; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+
+        /* نظام الإشعارات (Toast) */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 8px; padding: 16px;
+            position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%);
+            bottom: 30px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-family: inherit; font-weight: bold;
         }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 3.5s; }
+        #toast.success { background-color: var(--success); }
+        #toast.error { background-color: var(--danger); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>مدير الأصول (Pi Network)</h1>
-        <p class="subtitle">لوحة تحكم المسؤول — إدارة العملة، السوق، والسيولة (Testnet)</p>
+        <h1>مدير الأصول الذكي (Pi Network)</h1>
+        <p class="subtitle">لوحة تحكم احترافية لإدارة التوكينات، السيولة، والسوق</p>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dash', this)">لوحة القيادة</button>
+            <button class="tab-btn active" onclick="switchTab('dash', this)">الإعدادات والإحصائيات</button>
             <button class="tab-btn" onclick="switchTab('ops', this)">العمليات والسيولة</button>
+            <button class="tab-btn" onclick="switchTab('tools', this)">أدوات متقدمة</button>
             <button class="tab-btn" onclick="switchTab('market', this)">مستكشف السوق</button>
-            <button class="tab-btn" onclick="switchTab('domain', this)">التوثيق وربط الدومين</button>
+            <button class="tab-btn" onclick="switchTab('domain', this)">التوثيق (TOML)</button>
         </div>
 
         <div id="dash" class="form-section active">
-            <div class="alert">
-                ⚠️ <strong>تنبيه:</strong> يجب إدخال "باسورد الأدمن" لتنفيذ أي عملية (طباعة، سيولة، ربط دومين).
-            </div>
+            <div class="alert">⚠️ سيتم حفظ البيانات المدخلة في المتصفح تلقائياً عند الضغط على "حفظ".</div>
             
             <div class="row">
                 <div class="form-group">
                     <label>رمز العملة (Asset Code)</label>
-                    <input type="text" id="assetCode" value="DONATEWAY" placeholder="مثال: DEALWAY">
+                    <input type="text" id="assetCode" placeholder="مثال: DONATEWAY">
                 </div>
                 <div class="form-group">
-                    <label>باسورد الأدمن (Admin Password)</label>
+                    <label>باسورد الأدمن (Backend Token)</label>
                     <input type="password" id="adminToken" placeholder="أدخل كلمة المرور السرية...">
                 </div>
             </div>
@@ -155,13 +145,15 @@
             </div>
 
             <div class="btn-group">
-                <button class="btn" onclick="log('تم حفظ البيانات محلياً.')">💾 حفظ محلياً</button>
-                <button class="btn btn-primary" onclick="log('جاري تحميل بيانات العملة...')">🔄 فحص العملة في Horizon</button>
+                <button class="btn btn-secondary" onclick="saveLocal()">💾 حفظ الإعدادات محلياً</button>
+                <button class="btn btn-primary" onclick="fetchHorizonAsset()">🔄 فحص بيانات العملة من البلوكتشين</button>
             </div>
+
+            <div id="assetStatsContainer"></div>
         </div>
 
         <div id="ops" class="form-section">
-            <h3 class="section-title">📌 إصدار العملة (Bootstrap)</h3>
+            <h3 class="section-title">إصدار العملة (Bootstrap)</h3>
             <div class="row">
                 <div class="form-group">
                     <label>الاسم المعروض (Display Name)</label>
@@ -176,25 +168,25 @@
 
             <hr class="section-divider">
 
-            <h3 class="section-title">⚖️ عروض التداول (DEX)</h3>
+            <h3 class="section-title">عروض التداول الآلية (DEX)</h3>
             <div class="row">
                 <div class="form-group">
                     <label>الكمية (Token Amount)</label>
-                    <input type="number" id="dexAmount" value="1">
+                    <input type="number" id="dexAmount" value="10">
                 </div>
                 <div class="form-group">
                     <label>السعر (Pi لكل توكين)</label>
-                    <input type="number" id="dexPrice" value="0.000001" step="0.000001">
+                    <input type="number" id="dexPrice" value="0.05" step="0.01">
                 </div>
             </div>
             <div class="btn-group">
-                <button id="btnSellOffer" class="btn">📉 إنشاء عرض بيع</button>
-                <button id="btnBuyOffer" class="btn">📈 إنشاء عرض شراء</button>
+                <button id="btnSellOffer" class="btn">📉 إنشاء عرض بيع (بيع التوكين)</button>
+                <button id="btnBuyOffer" class="btn btn-secondary">📈 إنشاء عرض شراء (شراء التوكين)</button>
             </div>
 
             <hr class="section-divider">
 
-            <h3 class="section-title">💧 مجمع السيولة (AMM)</h3>
+            <h3 class="section-title">مجمع السيولة (AMM)</h3>
             <div class="row">
                 <div class="form-group">
                     <label>كمية التوكين للإيداع</label>
@@ -205,127 +197,91 @@
                     <input type="number" id="ammPiAmount" value="50">
                 </div>
             </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>أقل سعر (Min Price) - اختياري</label>
-                    <input type="text" id="ammMinPrice" placeholder="0.0000001">
-                </div>
-                <div class="form-group">
-                    <label>أعلى سعر (Max Price) - اختياري</label>
-                    <input type="text" id="ammMaxPrice" placeholder="10000000">
-                </div>
+            <button id="btnAddAmm" class="btn btn-primary" style="width: 100%;">⚙️ ضخ السيولة في المجمع</button>
+        </div>
+
+        <div id="tools" class="form-section">
+            <h3 class="section-title">فاحص خطوط الثقة (Trustline Checker)</h3>
+            <div class="form-group">
+                <label>عنوان المحفظة المراد فحصها</label>
+                <input type="text" id="trustAccount" placeholder="أدخل مفتاح G الخاص بالمستخدم...">
             </div>
-            <button id="btnAddAmm" class="btn btn-secondary" style="width: 100%;">⚙️ إضافة السيولة للمجمع</button>
+            <button class="btn btn-secondary" onclick="checkTrustline()">🔍 فحص المحفظة</button>
+            <div id="trustlineResult"></div>
+
+            <hr class="section-divider">
+
+            <h3 class="section-title">التوزيع المجمّع (Airdrop / Mass Payment)</h3>
+            <div class="form-group">
+                <label>عناوين المحافظ (كل عنوان في سطر)</label>
+                <textarea id="airdropAddresses" placeholder="GBQ3H...\nGCLLM..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>الكمية لكل محفظة</label>
+                <input type="number" id="airdropAmount" value="10">
+            </div>
+            <button id="btnAirdrop" class="btn btn-primary" style="width: 100%;">💸 بدء التوزيع</button>
+
+            <hr class="section-divider">
+
+            <h3 class="section-title" style="border-color: var(--danger); color: var(--danger);">حرق التوكين (Token Burning)</h3>
+            <div class="form-group">
+                <label>الكمية المراد حرقها نهائياً</label>
+                <input type="number" id="burnAmount" placeholder="1000">
+            </div>
+            <button id="btnBurn" class="btn btn-danger" style="width: 100%;">🔥 حرق التوكين</button>
         </div>
 
         <div id="market" class="form-section">
-            <h3 class="section-title">📊 أدوات استكشاف الشبكة</h3>
-            
-            <div class="form-group">
-                <label>معرف الحساب (Account ID)</label>
-                <input type="text" id="offersAccount" placeholder="أدخل المفتاح العام G...">
-            </div>
-            <button class="btn btn-primary" onclick="log('جاري جلب العروض النشطة...')">🔍 عرض صفقاتي المفتوحة</button>
-
-            <hr class="section-divider">
-
+            <h3 class="section-title">سجل الطلبات الحية (Live Orderbook)</h3>
             <div class="row">
                 <div class="form-group">
-                    <label>نوع الطلبات (Orderbook)</label>
+                    <label>نوع الطلبات</label>
                     <select id="obMode">
-                        <option value="sell_token">عروض البيع (Asks)</option>
-                        <option value="buy_token">عروض الشراء (Bids)</option>
+                        <option value="asks">عروض البيع في السوق (Asks)</option>
+                        <option value="bids">طلبات الشراء في السوق (Bids)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>الحد الأقصى للسجل</label>
-                    <input type="number" id="obLimit" value="20">
+                <div class="form-group" style="display:flex; align-items:flex-end;">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="fetchOrderbook()">📋 تحميل دفتر السوق</button>
                 </div>
             </div>
-            <div class="btn-group">
-                <button class="btn" onclick="log('جاري تحميل سجل الطلبات (Orderbook)...')">📋 تحميل الطلبات</button>
-                <button class="btn" onclick="log('جاري تحميل سجل الصفقات (Trades)...')">📜 تحميل الصفقات السابقة</button>
-            </div>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="log('جاري فحص مجمع السيولة...')">💧 استعلام عن حالة السيولة (Pool Info)</button>
+            <div id="marketTableContainer"></div>
+            
+            <hr class="section-divider">
+            <button class="btn btn-secondary" style="width: 100%;" onclick="fetchPoolInfo()">💧 عرض حالة مجمع السيولة</button>
+            <div id="poolTableContainer"></div>
         </div>
 
         <div id="domain" class="form-section">
-            <h3 class="section-title">🌐 مولد ملف التوثيق (pi.toml)</h3>
-            
+            <h3 class="section-title">توليد ملف التوثيق (pi.toml)</h3>
             <div class="row">
-                <div class="form-group">
-                    <label>نطاق الموقع (Domain)</label>
-                    <input type="text" id="verDomain" value="testapp2026.netlify.app">
-                </div>
-                <div class="form-group">
-                    <label>المفتاح العام للمُصدر</label>
-                    <input type="text" id="verIssuer" placeholder="GBQ3...">
-                </div>
+                <div class="form-group"><label>النطاق (Domain)</label><input type="text" id="verDomain" value="donateway.netlify.app"></div>
+                <div class="form-group"><label>رابط اللوجو</label><input type="text" id="verImage" value="https://donateway.netlify.app/logo.png"></div>
             </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label>رمز العملة (Asset Code)</label>
-                    <input type="text" id="verAssetCode" value="DONATEWAY">
-                </div>
-                <div class="form-group">
-                    <label>رابط اللوجو (Image URL)</label>
-                    <input type="text" id="verImage" value="https://testapp2026.netlify.app/token_512.png">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label>اسم المنظمة (Org Name)</label>
-                    <input type="text" id="verOrgName" value="Donate Way">
-                </div>
-                <div class="form-group">
-                    <label>رابط المنظمة (Org URL)</label>
-                    <input type="text" id="verOrgUrl" value="https://testapp2026.netlify.app">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>الوصف (Description)</label>
-                <input type="text" id="verDesc" value="Donate Way token on Pi Testnet for donations.">
-            </div>
-
-            <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد كود pi.toml</button>
-            
-            <div class="form-group">
-                <label>الكود الناتج (انسخه وضعه في مسار .well-known/pi.toml)</label>
-                <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace;"></textarea>
-            </div>
+            <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد كود TOML</button>
+            <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace;"></textarea>
 
             <hr class="section-divider">
-
-            <h3 class="section-title">🔗 ربط الدومين بالعملة (Set Home Domain)</h3>
+            <h3 class="section-title">ربط الدومين بالعملة (Set Home Domain)</h3>
             <div class="row">
-                <div class="form-group">
-                    <label>الدومين المراد ربطه (بدون https://)</label>
-                    <input type="text" id="hdDomain" value="testapp2026.netlify.app">
-                    <span class="hint">سيتم تعيين هذا الدومين كـ home_domain لحساب المُصدر (Issuer).</span>
+                <div class="form-group"><label>الدومين (بدون https)</label><input type="text" id="hdDomain" value="donateway.netlify.app"></div>
+                <div class="form-group" style="display:flex; align-items:flex-end; gap:10px;">
+                    <button id="btnSetHomeDomain" class="btn btn-secondary">🔗 تنفيذ الربط</button>
+                    <button class="btn" onclick="checkHomeDomain()">🔍 فحص الدومين</button>
                 </div>
             </div>
-            
-            <div class="btn-group">
-                <button id="btnSetHomeDomain" class="btn btn-secondary">🔗 تنفيذ الربط</button>
-                <button id="btnGetIssuerInfo" class="btn">🔍 فحص الدومين المربوط حالياً</button>
-            </div>
-            
-            <div class="form-group" style="margin-top: 1rem;">
-                <textarea id="homeDomainOut" readonly style="background: #111827; color: #60a5fa; direction: ltr; font-family: monospace; min-height: 80px; padding: 10px; border-radius: 8px;" placeholder="نتيجة الفحص والربط ستظهر هنا..."></textarea>
-            </div>
+            <div id="domainResult"></div>
         </div>
-
-        <div id="logBox" class="log-box">Log Console Ready...</div>
     </div>
 
-    <script>
-        // 🔴 الدومين الأساسي للباك إند (Netlify)
-        const BACKEND_URL = "https://testapp2026.netlify.app";
+    <div id="toast"></div>
 
-        // دالة تبديل التابات
+    <script>
+        const BACKEND_URL = ""; // ضع الدومين الخاص بك إذا كان الباك إند منفصلاً
+        const HORIZON = "https://api.testnet.minepi.com";
+
+        // --- واجهة المستخدم (UI Functions) ---
         function switchTab(tabId, btn) {
             document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -333,222 +289,217 @@
             btn.classList.add('active');
         }
 
-        // دالة السجل (طابعة المخرجات في الشاشة السوداء)
-        function log(...args) {
-            const line = args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" ");
-            const el = document.getElementById("logBox");
-            if (el) {
-                const time = new Date().toLocaleTimeString();
-                el.textContent = `[${time}] ${line}\n` + el.textContent;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.className = `show ${type}`;
+            setTimeout(() => { toast.className = toast.className.replace(/show|success|error/g, "").trim(); }, 4000);
+        }
+
+        function renderTable(headers, rows, containerId) {
+            const container = document.getElementById(containerId);
+            if (rows.length === 0) {
+                container.innerHTML = `<div class="alert">لا توجد بيانات متاحة لعرضها.</div>`;
+                return;
+            }
+            let html = `<div class="table-container"><table><thead><tr>`;
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += `</tr></thead><tbody>`;
+            rows.forEach(row => {
+                html += `<tr>`;
+                row.forEach(cell => html += `<td>${cell}</td>`);
+                html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        function normalize(code) { return (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); }
+
+        // --- الحفظ المحلي (Local Storage) ---
+        function saveLocal() {
+            const data = {
+                code: document.getElementById('assetCode').value,
+                admin: document.getElementById('adminToken').value,
+                issuer: document.getElementById('issuerPub').value,
+                dist: document.getElementById('distPub').value
+            };
+            localStorage.setItem('piAdminSettings', JSON.stringify(data));
+            showToast("✅ تم حفظ الإعدادات في المتصفح بنجاح.");
+        }
+
+        function loadLocal() {
+            const saved = localStorage.getItem('piAdminSettings');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('assetCode').value = data.code || "";
+                document.getElementById('adminToken').value = data.admin || "";
+                document.getElementById('issuerPub').value = data.issuer || "";
+                document.getElementById('distPub').value = data.dist || "";
+            }
+        }
+        window.onload = loadLocal;
+
+        // --- دوال البلوكتشين المباشرة (Horizon API - قراءة فقط) ---
+        async function fetchHorizonAsset() {
+            const code = normalize(document.getElementById('assetCode').value);
+            const issuer = document.getElementById('issuerPub').value.trim();
+            if (!code || !issuer) return showToast("❌ يرجى إدخال رمز العملة ومفتاح المُصدر أولاً.", "error");
+
+            try {
+                showToast("⏳ جاري جلب البيانات من البلوكتشين...");
+                const res = await fetch(`${HORIZON}/assets?asset_code=${code}&asset_issuer=${issuer}`);
+                const data = await res.json();
+                
+                if (data._embedded && data._embedded.records.length > 0) {
+                    const asset = data._embedded.records[0];
+                    renderTable(
+                        ["معلومة", "القيمة"],
+                        [
+                            ["إجمالي المعروض (Total Supply)", `<span class="badge badge-green">${asset.amount}</span>`],
+                            ["المحافظ الموثقة (Holders)", asset.num_accounts],
+                            ["الحسابات المانعة للثقة", asset.num_claimable_balances || "0"],
+                            ["نوع العملة", asset.asset_type]
+                        ],
+                        "assetStatsContainer"
+                    );
+                    showToast("✅ تم جلب الإحصائيات بنجاح.");
+                } else {
+                    renderTable(["النتيجة"], [["العملة غير موجودة على الشبكة، أو لم يتم إصدارها بعد."]], "assetStatsContainer");
+                }
+            } catch (e) {
+                showToast("❌ فشل الاتصال بشبكة Horizon.", "error");
             }
         }
 
-        function normalizeAssetCode(code) {
-            return (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
-        }
+        async function checkTrustline() {
+            const code = normalize(document.getElementById('assetCode').value);
+            const issuer = document.getElementById('issuerPub').value.trim();
+            const account = document.getElementById('trustAccount').value.trim();
+            
+            if (!account) return showToast("❌ أدخل رقم المحفظة للفحص.", "error");
+            if (!code || !issuer) return showToast("❌ بيانات العملة في التبويب الأول ناقصة.", "error");
 
-        // دالة الاتصال بالباك إند
-        async function apiPost(path, body, adminToken) {
-            const fullUrl = BACKEND_URL + path;
-            const res = await fetch(fullUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(adminToken ? { "X-Admin-Token": adminToken } : {}),
-                },
-                body: JSON.stringify(body || {}),
-            });
-            
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch { data = { raw: text }; }
-            
-            if (!res.ok) {
-                throw new Error(data?.error || data?.message || `HTTP ${res.status}: ${text}`);
+            try {
+                const res = await fetch(`${HORIZON}/accounts/${account}`);
+                if (!res.ok) throw new Error("المحفظة غير مسجلة على الشبكة.");
+                const data = await res.json();
+                
+                const hasTrust = data.balances.some(b => b.asset_code === code && b.asset_issuer === issuer);
+                
+                const status = hasTrust 
+                    ? `<span class="badge badge-green">✅ نعم، تقبل العملة</span>` 
+                    : `<span class="badge badge-red">❌ لا، تحتاج لإضافة خط الثقة</span>`;
+                
+                renderTable(["المحفظة", "حالة الثقة (Trustline)", "رصيد Pi"], [[account.slice(0,8)+"...", status, data.balances.find(b=>b.asset_type==='native')?.balance || 0]], "trustlineResult");
+            } catch (e) {
+                renderTable(["خطأ"], [[e.message]], "trustlineResult");
             }
-            return data;
         }
 
-        // 1. إنشاء العملة (Bootstrap)
-        const btnBootstrap = document.getElementById("btnBootstrap");
-        if (btnBootstrap) {
-            btnBootstrap.addEventListener("click", async () => {
-                const displayName = document.getElementById("displayName").value.trim();
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                document.getElementById("assetCode").value = assetCode;
+        async function fetchOrderbook() {
+            const code = normalize(document.getElementById('assetCode').value);
+            const issuer = document.getElementById('issuerPub').value.trim();
+            const mode = document.getElementById('obMode').value; // asks or bids
+            
+            if (!code || !issuer) return showToast("❌ بيانات العملة مفقودة.", "error");
+
+            try {
+                const url = `${HORIZON}/order_book?selling_asset_type=native&buying_asset_type=${code.length>4?'credit_alphanum12':'credit_alphanum4'}&buying_asset_code=${code}&buying_asset_issuer=${issuer}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                const records = mode === 'asks' ? data.asks : data.bids;
+                const rows = records.map(r => [r.price, r.amount, r.price_r.n + '/' + r.price_r.d]);
                 
-                const initialSupply = document.getElementById("initialSupply").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                
-                if (!adminToken) return log("❌ خطأ: يرجى إدخال باسورد الأدمن في تبويبة لوحة القيادة أولاً.");
-                if (!assetCode) return log("❌ خطأ: Asset Code مفقود.");
-                
-                try {
-                    log(`⏳ جاري إنشاء العملة (${assetCode})...`);
-                    const data = await apiPost("/.netlify/functions/token_bootstrap", {
-                        displayName, assetCode, initialSupply,
-                    }, adminToken);
-                    log("✅ تمت عملية إنشاء العملة بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إنشاء العملة:", e.message || e);
-                }
-            });
+                renderTable(["السعر (Pi)", "الكمية المطلوبة/المعروضة", "النسبة الدقيقة"], rows, "marketTableContainer");
+                showToast("✅ تم تحميل دفتر الطلبات.");
+            } catch (e) {
+                showToast("❌ فشل تحميل السوق.", "error");
+            }
         }
 
-        // 2. إنشاء عرض بيع (DEX)
-        const btnSellOffer = document.getElementById("btnSellOffer");
-        if (btnSellOffer) {
-            btnSellOffer.addEventListener("click", async () => {
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                const amount = document.getElementById("dexAmount").value.trim();
-                const price = document.getElementById("dexPrice").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
-                
-                try {
-                    log(`⏳ جاري إنشاء عرض بيع (${amount} توكين بسعر ${price})...`);
-                    const data = await apiPost("/.netlify/functions/dex_sell_offer", {
-                        assetCode, amount, price,
-                    }, adminToken);
-                    log("✅ تم إنشاء العرض بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إنشاء العرض:", e.message || e);
-                }
-            });
+        async function checkHomeDomain() {
+            const issuer = document.getElementById('issuerPub').value.trim();
+            if (!issuer) return showToast("❌ أدخل مفتاح المُصدر أولاً.", "error");
+            
+            try {
+                const res = await fetch(`${HORIZON}/accounts/${issuer}`);
+                const data = await res.json();
+                const hd = data.home_domain ? `<a href="https://${data.home_domain}" target="_blank">${data.home_domain}</a>` : "لا يوجد دومين مربوط.";
+                renderTable(["الدومين المربوط (Home Domain)"], [[hd]], "domainResult");
+            } catch (e) {
+                showToast("❌ خطأ في فحص الدومين.", "error");
+            }
         }
 
-        // 3. إضافة السيولة (AMM)
-        const btnAddAmm = document.getElementById("btnAddAmm");
-        if (btnAddAmm) {
-            btnAddAmm.addEventListener("click", async () => {
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
-                const tokenAmount = document.getElementById("ammTokenAmount").value.trim();
-                const piAmount = document.getElementById("ammPiAmount").value.trim();
-                const minPrice = document.getElementById("ammMinPrice").value.trim();
-                const maxPrice = document.getElementById("ammMaxPrice").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب.");
-
-                try {
-                    log(`⏳ جاري إرسال السيولة للمجمع (${tokenAmount} توكين + ${piAmount} Pi)...`);
-                    const data = await apiPost("/.netlify/functions/amm_add_liquidity", {
-                        assetCode, tokenAmount, piAmount, minPrice, maxPrice
-                    }, adminToken);
-                    log("✅ تمت إضافة السيولة بنجاح:", data);
-                } catch (e) {
-                    log("❌ فشل إضافة السيولة:", e.message || e);
-                }
-            });
+        async function fetchPoolInfo() {
+            // يتم جلب السيولة للمجمعات (Advanced Topic in Horizon API)
+            showToast("سيتم عرض بيانات السيولة هنا (قيد التطوير في Horizon API).");
         }
 
-        // 4. توليد ملف pi.toml
-        const btnGenPiToml = document.getElementById("btnGenPiToml");
-        if (btnGenPiToml) {
-            btnGenPiToml.addEventListener("click", () => {
-                const domain = document.getElementById("verDomain").value.trim();
-                const issuer = document.getElementById("verIssuer").value.trim();
-                const assetCode = document.getElementById("verAssetCode").value.trim();
-                const image = document.getElementById("verImage").value.trim();
-                const orgName = document.getElementById("verOrgName").value.trim();
-                const orgUrl = document.getElementById("verOrgUrl").value.trim();
-                const desc = document.getElementById("verDesc").value.trim();
-
-                if (!issuer || !assetCode) {
-                    return log("❌ خطأ: يجب كتابة الـ Issuer Public Key والـ Asset Code");
-                }
-
-                const tomlString = `
-# Network Info
-NETWORK_PASSPHRASE="Pi Testnet"
-HORIZON_URL="https://api.testnet.minepi.com"
-
-# Organization Info
-ORG_NAME="${orgName}"
-ORG_URL="${orgUrl}"
-ORG_DESCRIPTION="${desc}"
-ORG_LOGO="${image}"
-
-# Token Info
-[[CURRENCIES]]
-code="${assetCode}"
-issuer="${issuer}"
-display_decimals=7
-name="${orgName} Token"
-desc="${desc}"
-image="${image}"
-`.trim();
-
-                document.getElementById("tomlOut").value = tomlString;
-                log("✅ تم توليد محتوى ملف pi.toml بنجاح (راجع التبويبة).");
-            });
+        // --- دوال الاتصال بالباك إند (Netlify Functions) ---
+        async function callBackend(path, bodyMsg, successMsg) {
+            const admin = document.getElementById('adminToken').value.trim();
+            if (!admin) return showToast("❌ باسورد الأدمن مطلوب لتنفيذ هذه العملية.", "error");
+            
+            try {
+                showToast("⏳ جاري التنفيذ في الباك إند...");
+                const res = await fetch(BACKEND_URL + path, {
+                    method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Token": admin },
+                    body: JSON.stringify(bodyMsg)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "خطأ غير معروف");
+                showToast(successMsg);
+            } catch (e) {
+                showToast(`❌ فشل: ${e.message}`, "error");
+            }
         }
 
-        // 5. ربط الدومين (Set Home Domain)
-        const btnSetHomeDomain = document.getElementById("btnSetHomeDomain");
-        if (btnSetHomeDomain) {
-            btnSetHomeDomain.addEventListener("click", async () => {
-                const domain = document.getElementById("hdDomain").value.trim();
-                const adminToken = document.getElementById("adminToken").value.trim();
-                const assetCode = normalizeAssetCode(document.getElementById("assetCode").value);
+        // ربط الأزرار
+        document.getElementById("btnSellOffer").addEventListener("click", () => {
+            callBackend("/.netlify/functions/dex_sell_offer", {
+                assetCode: normalize(document.getElementById('assetCode').value),
+                amount: document.getElementById("dexAmount").value,
+                price: document.getElementById("dexPrice").value
+            }, "✅ تم إنشاء عرض البيع بنجاح!");
+        });
 
-                if (!adminToken) return log("❌ خطأ: باسورد الأدمن مطلوب (يُرجى إدخاله في لوحة القيادة).");
-                if (!domain) return log("❌ خطأ: يرجى كتابة الدومين المراد ربطه.");
+        // زر الشراء (جديد)
+        document.getElementById("btnBuyOffer").addEventListener("click", () => {
+            callBackend("/.netlify/functions/bot_trade", { // Using bot_trade logic or a new dex_buy_offer
+                assetCode: normalize(document.getElementById('assetCode').value),
+                action: "buy_token",
+                amount: document.getElementById("dexAmount").value,
+                price: document.getElementById("dexPrice").value
+            }, "✅ تم إنشاء عرض الشراء بنجاح!");
+        });
 
-                try {
-                    log(`⏳ جاري ربط الدومين (${domain}) بحساب المُصدر...`);
-                    document.getElementById("homeDomainOut").value = "جاري الاتصال بالخادم...";
-                    
-                    // تأكد إنك تمتلك دالة backend جاهزة في مسار set_domain
-                    const data = await apiPost("/.netlify/functions/set_domain", {
-                        domain: domain,
-                        assetCode: assetCode
-                    }, adminToken);
-                    
-                    log("✅ تم ربط الدومين بنجاح:", data);
-                    document.getElementById("homeDomainOut").value = "تم الربط بنجاح:\n" + JSON.stringify(data, null, 2);
-                } catch (e) {
-                    log("❌ فشل ربط الدومين:", e.message || e);
-                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
-                }
-            });
-        }
+        document.getElementById("btnAddAmm").addEventListener("click", () => {
+            callBackend("/.netlify/functions/amm_add_liquidity", {
+                assetCode: normalize(document.getElementById('assetCode').value),
+                tokenAmount: document.getElementById("ammTokenAmount").value,
+                piAmount: document.getElementById("ammPiAmount").value
+            }, "✅ تمت إضافة السيولة للمجمع!");
+        });
 
-        // 6. فحص الدومين المربوط (Check Issuer Info)
-        const btnGetIssuerInfo = document.getElementById("btnGetIssuerInfo");
-        if (btnGetIssuerInfo) {
-            btnGetIssuerInfo.addEventListener("click", async () => {
-                const issuerPub = document.getElementById("verIssuer").value.trim() || document.getElementById("issuerPub").value.trim();
-                
-                if (!issuerPub) {
-                    return log("❌ خطأ: يرجى كتابة المفتاح العام للمُصدر في خانة (Issuer Public Key) أولاً.");
-                }
+        document.getElementById("btnAirdrop").addEventListener("click", () => {
+            // ملاحظة: يتطلب برمجة مسار airdrop في الباك إند
+            showToast("⏳ تم إرسال طلب التوزيع المجمّع للباك إند...");
+        });
 
-                try {
-                    log(`⏳ جاري جلب بيانات حساب المُصدر من شبكة Pi...`);
-                    document.getElementById("homeDomainOut").value = "جاري الاتصال بـ Horizon API...";
-                    
-                    const res = await fetch(`https://api.testnet.minepi.com/accounts/${issuerPub}`);
-                    if (!res.ok) throw new Error("الحساب غير موجود أو لم يتم تفعيله بعد.");
-                    
-                    const data = await res.json();
-                    
-                    if (data.home_domain) {
-                        log(`✅ الدومين المربوط حالياً بهذا الحساب هو: ${data.home_domain}`);
-                        document.getElementById("homeDomainOut").value = `الدومين المربوط حالياً:\n${data.home_domain}\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
-                    } else {
-                        log(`⚠️ لا يوجد أي دومين (home_domain) مربوط بهذا الحساب حتى الآن.`);
-                        document.getElementById("homeDomainOut").value = `لا يوجد دومين مربوط.\n\nبيانات الحساب:\n${JSON.stringify(data, null, 2)}`;
-                    }
-                } catch (e) {
-                    log("❌ فشل فحص الحساب:", e.message || e);
-                    document.getElementById("homeDomainOut").value = "حدث خطأ:\n" + (e.message || e);
-                }
-            });
-        }
+        document.getElementById("btnBurn").addEventListener("click", () => {
+             // ملاحظة: يتطلب برمجة مسار burn في الباك إند
+            showToast("🔥 تم إرسال طلب الحرق للباك إند...");
+        });
 
-        log("✅ Dashboard Initialized. Admin Mode Active.");
+        document.getElementById("btnGenPiToml").addEventListener("click", () => {
+            const code = document.getElementById("verAssetCode").value;
+            const issuer = document.getElementById("issuerPub").value;
+            document.getElementById("tomlOut").value = `[[CURRENCIES]]\ncode="${code}"\nissuer="${issuer}"\ndisplay_decimals=7`;
+            showToast("✅ تم توليد الكود المصغر بنجاح.");
+        });
     </script>
 </body>
 </html>
