@@ -256,11 +256,15 @@
         <div id="domain" class="form-section">
             <h3 class="section-title">توليد ملف التوثيق (pi.toml)</h3>
             <div class="row">
+                <div class="form-group"><label>اسم المنظمة</label><input type="text" id="verOrgName" value="Donate Way"></div>
                 <div class="form-group"><label>النطاق (Domain)</label><input type="text" id="verDomain" value="donateway.netlify.app"></div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>الوصف</label><input type="text" id="verDesc" value="Donate Way token on Pi Testnet."></div>
                 <div class="form-group"><label>رابط اللوجو</label><input type="text" id="verImage" value="https://donateway.netlify.app/logo.png"></div>
             </div>
             <button id="btnGenPiToml" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">📝 توليد كود TOML</button>
-            <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace;"></textarea>
+            <textarea id="tomlOut" readonly style="background: #f9fafb; direction: ltr; font-family: monospace; height: 260px;"></textarea>
 
             <hr class="section-divider">
             <h3 class="section-title">ربط الدومين بالعملة (Set Home Domain)</h3>
@@ -529,15 +533,23 @@
             }
         });
 
-        // 7. توليد ملف TOML
+        // 7. توليد ملف TOML (تم الإصلاح)
         document.getElementById("btnGenPiToml").addEventListener("click", () => {
-            const code = document.getElementById("verAssetCode").value;
-            const issuer = document.getElementById("issuerPub").value;
-            const domain = document.getElementById("verDomain").value;
-            const image = document.getElementById("verImage").value;
+            const code = document.getElementById("assetCode").value.trim();
+            const issuer = document.getElementById("issuerPub").value.trim();
+            const orgName = document.getElementById("verOrgName").value.trim();
+            const domain = document.getElementById("verDomain").value.trim().replace(/^https?:\/\//, ''); // تنظيف الرابط من https
+            const desc = document.getElementById("verDesc").value.trim();
+            const image = document.getElementById("verImage").value.trim();
             
-            document.getElementById("tomlOut").value = `NETWORK_PASSPHRASE="Pi Testnet"\nHORIZON_URL="https://api.testnet.minepi.com"\n\n[[CURRENCIES]]\ncode="${code}"\nissuer="${issuer}"\ndisplay_decimals=7\nimage="${image}"`;
-            showToast("✅ تم توليد الكود المصغر بنجاح.");
+            if (!code || !issuer) {
+                return showToast("❌ يرجى إدخال (رمز العملة) و (مفتاح المُصدر) في التبويبة الأولى أولاً.", "error");
+            }
+
+            const tomlString = `# Network Info\nNETWORK_PASSPHRASE="Pi Testnet"\nHORIZON_URL="https://api.testnet.minepi.com"\n\n# Organization Info\nORG_NAME="${orgName}"\nORG_URL="https://${domain}"\nORG_DESCRIPTION="${desc}"\nORG_LOGO="${image}"\n\n# Token Info\n[[CURRENCIES]]\ncode="${code}"\nissuer="${issuer}"\ndisplay_decimals=7\nname="${orgName} Token"\ndesc="${desc}"\nimage="${image}"`;
+            
+            document.getElementById("tomlOut").value = tomlString;
+            showToast("✅ تم توليد كود TOML الاحترافي بنجاح.");
         });
 
         // 8. ربط الدومين بالمُصدر
